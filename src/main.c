@@ -9,8 +9,8 @@ const int WINDOW_HEIGHT = 600;
 bool is_running = false;
 SDL_Window* window = false;
 SDL_Renderer* renderer = NULL;
-uint32_t* color_buffer = NULL;
-SDL_Texture* color_buffer_texture = NULL;
+uint32_t* color_buffer = NULL;  // Raw pixel data
+SDL_Texture* color_buffer_texture = NULL; // Texture to be displayed to the render target
 
 size_t get_pixel(const size_t i, const size_t j) {
   return (WINDOW_WIDTH * i) + j;
@@ -57,7 +57,7 @@ void setup(void) {
   color_buffer_texture = SDL_CreateTexture(
     renderer,
     SDL_PIXELFORMAT_ARGB8888, // Pixel Format
-    SDL_TEXTUREACCESS_STREAMING,
+    SDL_TEXTUREACCESS_STREAMING,  // Changes will automatically update the texture
     WINDOW_WIDTH,
     WINDOW_HEIGHT
   );
@@ -96,6 +96,10 @@ void render_color_buffer(void) {
   SDL_RenderCopy(renderer, color_buffer_texture, NULL, NULL);
 }
 
+/**
+ * Fills the buffer with a color.
+ * @param color The color (in ARGB8888 format) to fill the color buffer with.
+ */
 void clear_color_buffer(uint32_t color) {
   for (int y = 0; y < WINDOW_HEIGHT; y++) {
     for (int x = 0; x < WINDOW_WIDTH; x++) {
