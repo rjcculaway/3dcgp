@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <SDL.h>
 
+#include "exercise01.c"
+
 int window_width = 800;
 int window_height = 600;
 
@@ -121,8 +123,10 @@ void render(void) {
   SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
   SDL_RenderClear(renderer);
 
+  draw_grid(color_buffer, window_width, window_height);
+
   render_color_buffer();
-  clear_color_buffer(0xFFFFFF00);
+  clear_color_buffer(0xFF000000);
 
   SDL_RenderPresent(renderer);
 }
