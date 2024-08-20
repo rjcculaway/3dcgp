@@ -1,10 +1,19 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <SDL.h>
 
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+
+bool is_running = false;
 SDL_Window* window = false;
 SDL_Renderer* renderer = NULL;
-bool is_running = false;
+uint32_t* color_buffer = NULL;
+
+inline size_t get_pixel(const size_t i, const size_t j) {
+  return (WINDOW_WIDTH * i) + j;
+}
 
 bool initialize_window(void) {
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
@@ -16,8 +25,8 @@ bool initialize_window(void) {
       NULL, // window title 
       SDL_WINDOWPOS_CENTERED, // pos x
       SDL_WINDOWPOS_CENTERED, // pos y
-      800, // width
-      600, // height
+      WINDOW_WIDTH, // width
+      WINDOW_HEIGHT, // height
       SDL_WINDOW_BORDERLESS
     );
   if (!window) {
@@ -40,7 +49,7 @@ bool initialize_window(void) {
 }
 
 void setup(void) {
-  // TODO
+  color_buffer = (uint32_t*) malloc(sizeof(uint32_t) * WINDOW_WIDTH * WINDOW_HEIGHT);
 }
 
 void process_input(void) {
@@ -73,6 +82,19 @@ void render(void) {
   SDL_RenderPresent(renderer);
 }
 
+void destroy_window(void) {
+  free(color_buffer);
+  color_buffer = NULL;
+  
+  SDL_DestroyRenderer(renderer);
+  renderer = NULL;
+  
+  SDL_DestroyWindow(window);
+  window = NULL;
+  
+  SDL_Quit();
+}
+
 
 int main(void) {
   
@@ -88,6 +110,7 @@ int main(void) {
     update();
     render();
   }
+  destroy_window();
 
   return 0;
 }
