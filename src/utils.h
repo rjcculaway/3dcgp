@@ -1,2 +1,4 @@
-#include <stdio.h>
-#include <stdint.h>
+#ifndef UTILS
+#define UTILS
+
+#endif
