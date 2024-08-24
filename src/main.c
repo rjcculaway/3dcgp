@@ -10,6 +10,8 @@ const int N_POINTS = 9 * 9 * 9;
 vec3_t cube_points[N_POINTS]; 
 vec2_t projected_points[N_POINTS];
 
+vec3_t camera_position = {.x = 0, .y = 0, .z = -5};
+
 float fov_factor = 360;
 
 bool is_running = false;
@@ -59,13 +61,19 @@ void process_input(void) {
       if (event.key.keysym.sym == SDLK_ESCAPE) {
         is_running = false;
       }
+      if (event.key.keysym.sym == SDLK_UP) {
+        camera_position.z -= 0.1;
+      }
+      if (event.key.keysym.sym == SDLK_DOWN) {
+        camera_position.z += 0.1;
+      }
       break;
     default:
       break;
   }
 }
 
-vec2_t project(vec3_t point) {
+vec2_t parallel_project(vec3_t point) {
   // Parallel projection (ignore z component)
   vec2_t projected_point = { 
     .x = point.x * fov_factor, 
@@ -74,10 +82,19 @@ vec2_t project(vec3_t point) {
   return projected_point;
 }
 
+vec2_t project(vec3_t point) {
+  // Perspective projection (apply perspective divide)
+  vec2_t projected_point = { 
+    .x = point.x / point.z * fov_factor, 
+    .y = point.y / point.z * fov_factor
+  };
+  return projected_point;
+}
+
 void update(void) {
   for (int i = 0; i < N_POINTS; i++) {
     vec3_t point = cube_points[i];
-    
+    point.z -= camera_position.z;
     // Project the point
     vec2_t projected_point = project(point);
     projected_points[i] = projected_point;
@@ -97,8 +114,8 @@ void render(void) {
     draw_rect(
       projected_point.y + window_width / 2,
       projected_point.x + window_height / 2,
-      12,
-      12,
+      4,
+      4,
       0xFFFFFF00
     );
   }
