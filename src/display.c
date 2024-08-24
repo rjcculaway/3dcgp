@@ -9,7 +9,7 @@ SDL_Renderer *renderer = NULL;
 uint32_t *color_buffer = NULL;            // Raw pixel data
 SDL_Texture *color_buffer_texture = NULL; // Texture to be displayed to the render target
 
-size_t get_pixel(const size_t x, const size_t y) {
+size_t inline get_pixel(const size_t x, const size_t y) {
   return (window_width * y) + x;
 }
 
@@ -88,7 +88,7 @@ void clear_color_buffer(uint32_t color) {
   }
 }
 
-bool is_valid_pixel(const int x, const int y) {
+bool is_valid_pixel(int x, int y) {
   return x < window_width && y < window_height && x >= 0 && y >= 0;
 }
 void draw_pixel(int x, int y, uint32_t color) {
