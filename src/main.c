@@ -11,6 +11,7 @@ vec3_t cube_points[N_POINTS];
 vec2_t projected_points[N_POINTS];
 
 vec3_t camera_position = {.x = 0, .y = 0, .z = -5};
+vec3_t cube_rotation = {.x = 0, .y = 0, .z = 0};
 
 float fov_factor = 360;
 
@@ -76,6 +77,14 @@ void process_input(void)
     {
       camera_position.z += 0.1;
     }
+    if (event.key.keysym.sym == SDLK_LEFT)
+    {
+      camera_position.x -= 0.1;
+    }
+    if (event.key.keysym.sym == SDLK_RIGHT)
+    {
+      camera_position.x += 0.1;
+    }
     break;
   default:
     break;
@@ -102,12 +111,22 @@ vec2_t project(vec3_t point)
 
 void update(void)
 {
+  cube_rotation.x += 0.005;
+  cube_rotation.y += 0.01;
+  cube_rotation.z += 0.005;
   for (int i = 0; i < N_POINTS; i++)
   {
+    // Transform then project
     vec3_t point = cube_points[i];
-    point.z -= camera_position.z;
-    // Project the point
-    vec2_t projected_point = project(point);
+    vec3_t transformed_point = point;
+    transformed_point = vec3_rotate_x(transformed_point, cube_rotation.x);
+    transformed_point = vec3_rotate_y(transformed_point, cube_rotation.y);
+    transformed_point = vec3_rotate_z(transformed_point, cube_rotation.z);
+    transformed_point.z -= camera_position.z;
+    transformed_point.y -= camera_position.y;
+    transformed_point.x -= camera_position.x;
+    // Project the transform point
+    vec2_t projected_point = project(transformed_point);
     projected_points[i] = projected_point;
   }
 }
@@ -124,8 +143,8 @@ void render(void)
   {
     vec2_t projected_point = projected_points[i];
     draw_rect(
-        projected_point.y + window_width / 2,
-        projected_point.x + window_height / 2,
+        projected_point.x + window_width / 2,
+        projected_point.y + window_height / 2,
         4,
         4,
         0xFFFFFF00);

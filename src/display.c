@@ -107,11 +107,11 @@ void draw_pixel(int x, int y, uint32_t color)
 }
 void draw_rect(int x, int y, int width, int height, uint32_t color)
 {
-  for (int row = 0; row < height; row++)
+  for (int current_x = 0; current_x < width; current_x++)
   {
-    for (int col = 0; col < width; col++)
+    for (int current_y = 0; current_y < height; current_y++)
     {
-      draw_pixel(col + x, row + y, color);
+      draw_pixel(current_x + x, current_y + y, color);
     }
   }
 }
