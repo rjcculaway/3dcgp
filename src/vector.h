@@ -1,12 +1,14 @@
 #ifndef VECTOR_3DCGP
 #define VECTOR_3DCGP
 
-typedef struct vec2 {
+typedef struct vec2
+{
   float x;
   float y;
 } vec2_t;
 
-typedef struct vec3 {
+typedef struct vec3
+{
   float x;
   float y;
   float z;
