@@ -3,8 +3,6 @@
 #include <stdbool.h>
 #include <SDL.h>
 
-#include "exercise01.c"
-
 int window_width = 800;
 int window_height = 600;
 
@@ -16,6 +14,14 @@ SDL_Texture* color_buffer_texture = NULL; // Texture to be displayed to the rend
 
 size_t get_pixel(const size_t i, const size_t j) {
   return (window_width * i) + j;
+}
+
+void draw_rect(int x, int y, int width, int height, uint32_t color) {
+  for (int row = y; row < height && row < window_height; row++) {
+    for (int col = x; col < width && col < window_width; col++) {
+      color_buffer[get_pixel(row, col)] = color;
+    }
+  }
 }
 
 bool initialize_window(void) {
@@ -60,9 +66,13 @@ bool initialize_window(void) {
   return true;
 }
 
-void setup(void) {
+bool setup(void) {
   // Allocate memory for the color buffer
   color_buffer = (uint32_t*) malloc(sizeof(uint32_t) * window_width * window_height);
+
+  if (color_buffer == NULL) {
+    return false;
+  }
 
   // Create the SDL Texture to display the color buffer
   color_buffer_texture = SDL_CreateTexture(
@@ -72,6 +82,7 @@ void setup(void) {
     window_width,
     window_height
   );
+  return true;
 }
 
 void process_input(void) {
@@ -123,7 +134,7 @@ void render(void) {
   SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
   SDL_RenderClear(renderer);
 
-  draw_grid(color_buffer, window_width, window_height);
+  draw_rect(0, 0, 200, 200, 0xFF00FF00);
 
   render_color_buffer();
   clear_color_buffer(0xFF000000);
@@ -153,7 +164,12 @@ int main(void) {
   // 1. Process input.
   // 2. Update.
   // 3. Render.
-  setup();
+  bool is_setup = setup();
+  if (!is_setup) {{
+    printf("Could not setup.\n");
+    return 1;
+  }}
+
   while (is_running) {
     process_input();
     update();
