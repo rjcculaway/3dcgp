@@ -6,6 +6,14 @@
 #include "display.h"
 #include "vector.h"
 
+const int N_POINTS = 9 * 9 * 9;
+vec3_t cube_points[N_POINTS]; 
+vec2_t projected_points[N_POINTS];
+
+float fov_factor = 360;
+
+bool is_running = false;
+
 bool setup(void) {
   // Allocate memory for the color buffer
   color_buffer = (uint32_t*) malloc(sizeof(uint32_t) * window_width * window_height);
@@ -23,6 +31,18 @@ bool setup(void) {
     window_width,
     window_height
   );
+
+  int point_count = 0;
+  // Generate points for the cube from -1 to 1
+  for (float x = -1; x <= 1; x += 0.25) {
+    for (float y = -1; y <= 1; y += 0.25) {
+      for (float z = -1; z <= 1; z += 0.25) {
+        vec3_t point = {.x = x, .y = y, .z = z};
+        cube_points[point_count++] = point;
+      }
+    }
+  }
+
   return true;
 }
 
@@ -45,15 +65,43 @@ void process_input(void) {
   }
 }
 
+vec2_t project(vec3_t point) {
+  // Parallel projection (ignore z component)
+  vec2_t projected_point = { 
+    .x = point.x * fov_factor, 
+    .y = point.y * fov_factor
+  };
+  return projected_point;
+}
+
 void update(void) {
-  // TODO
+  for (int i = 0; i < N_POINTS; i++) {
+    vec3_t point = cube_points[i];
+    
+    // Project the point
+    vec2_t projected_point = project(point);
+    projected_points[i] = projected_point;
+
+  }
 }
 
 void render(void) {
   SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
   SDL_RenderClear(renderer);
 
-  draw_rect(0, 0, 200, 200, 0xFF00FF00);
+  draw_grid();
+  // draw_rect(0, 0, 200, 200, 0xFF00FF00);
+  // Draw all projected points from the cube
+  for (int i = 0; i < N_POINTS; i++) {
+    vec2_t projected_point = projected_points[i];
+    draw_rect(
+      projected_point.y + window_width / 2,
+      projected_point.x + window_height / 2,
+      12,
+      12,
+      0xFFFFFF00
+    );
+  }
 
   render_color_buffer();
   clear_color_buffer(0xFF000000);
@@ -74,8 +122,6 @@ int main(void) {
     fprintf(stderr, "ERROR: Could not perform setup.\n");
     return 1;
   }}
-
-  vec3_t my_vector = {2.0, 3.0, -4.0};
 
   while (is_running) {
     process_input();
