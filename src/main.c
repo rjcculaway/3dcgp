@@ -10,6 +10,7 @@ bool setup(void) {
   color_buffer = (uint32_t*) malloc(sizeof(uint32_t) * window_width * window_height);
 
   if (color_buffer == NULL) {
+    fprintf(stderr, "ERROR: Failed to allocated memory for the color buffer.");
     return false;
   }
 
@@ -59,7 +60,6 @@ void render(void) {
   SDL_RenderPresent(renderer);
 }
 
-
 int main(void) {
   
   is_running = initialize_window();
@@ -68,9 +68,9 @@ int main(void) {
   // 1. Process input.
   // 2. Update.
   // 3. Render.
-  bool is_setup = setup();
-  if (!is_setup) {{
-    printf("Could not setup.\n");
+  bool is_setup_success = setup();
+  if (!is_setup_success) {{
+    fprintf(stderr, "ERROR: Could not perform setup.\n");
     return 1;
   }}
 

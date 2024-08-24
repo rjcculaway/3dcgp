@@ -9,13 +9,13 @@ SDL_Renderer *renderer = NULL;
 uint32_t *color_buffer = NULL;            // Raw pixel data
 SDL_Texture *color_buffer_texture = NULL; // Texture to be displayed to the render target
 
-size_t get_pixel(const size_t i, const size_t j) {
-  return (window_width * i) + j;
+size_t get_pixel(const size_t x, const size_t y) {
+  return (window_width * y) + x;
 }
 
 bool initialize_window(void) {
   if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-    fprintf(stderr, "Error initializing SDL.\n");
+    fprintf(stderr, "ERROR: Failed initializing SDL.\n");
     return false;
   }
   // Query the screen resolution
@@ -35,7 +35,7 @@ bool initialize_window(void) {
       SDL_WINDOW_BORDERLESS
     );
   if (!window) {
-    fprintf(stderr, "Error creating SDL window.\n");
+    fprintf(stderr, "ERROR: Failed reating SDL window.\n");
     return false;
   }
 
@@ -46,7 +46,7 @@ bool initialize_window(void) {
     0
   );
   if (!renderer) {
-    fprintf(stderr, "Error creating SDL renderer.\n");
+    fprintf(stderr, "ERROR: Failed creating SDL renderer.\n");
     return false;
   }
 
@@ -83,22 +83,32 @@ void render_color_buffer(void) {
 void clear_color_buffer(uint32_t color) {
   for (int y = 0; y < window_height; y++) {
     for (int x = 0; x < window_width; x++) {
-      color_buffer[get_pixel(y, x)] = color;
+      color_buffer[get_pixel(x, y)] = color;
     }
   }
 }
 
+bool is_valid_pixel(const int x, const int y) {
+  return x < window_width && y < window_height && x >= 0 && y >= 0;
+}
+void draw_pixel(int x, int y, uint32_t color) {
+  if (is_valid_pixel(x, y)) {
+    color_buffer[get_pixel(x, y)] = color;
+  } else {
+    fprintf(stderr, "WARNING: Attempted to draw at incorrect pixel position {%d, %d}.", x ,y);
+  }
+}
 void draw_rect(int x, int y, int width, int height, uint32_t color) {
-  for (int row = y; row < height && row < window_height; row++) {
-    for (int col = x; col < width && col < window_width; col++) {
-      color_buffer[get_pixel(row, col)] = color;
+  for (int row = y; row < height; row++) {
+    for (int col = x; col < width; col++) {
+      draw_pixel(col, row, color);
     }
   }
 }
 void draw_grid(void) {
   for (int y = 0; y < window_height; y++) {
     for (int x = 0; x < window_height; x++) {
-      color_buffer[get_pixel(y, x)] = 0xFF444444;
+      draw_pixel(x, y, 0xFF444444);
     }
   }
 }
