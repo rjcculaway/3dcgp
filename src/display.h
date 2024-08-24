@@ -1,5 +1,5 @@
-#ifndef DISPLAY
-#define DISPLAY
+#ifndef DISPLAY_3DCGP
+#define DISPLAY_3DCGP
 
 #include <stdio.h>
 #include <stdint.h>

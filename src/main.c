@@ -4,6 +4,7 @@
 #include <SDL.h>
 
 #include "display.h"
+#include "vector.h"
 
 bool setup(void) {
   // Allocate memory for the color buffer
@@ -73,6 +74,8 @@ int main(void) {
     fprintf(stderr, "ERROR: Could not perform setup.\n");
     return 1;
   }}
+
+  vec3_t my_vector = {2.0, 3.0, -4.0};
 
   while (is_running) {
     process_input();
