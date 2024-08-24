@@ -14,7 +14,6 @@
 extern int window_width;
 extern int window_height;
 
-extern bool is_running;
 extern SDL_Window *window;
 extern SDL_Renderer *renderer;
 extern uint32_t *color_buffer;            // Raw pixel data

@@ -1,9 +1,8 @@
 #include "display.h"
 
-int window_width = 800;
-int window_height = 600;
+int window_width = 1440;
+int window_height = 900;
 
-bool is_running = false;
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
 uint32_t *color_buffer = NULL;            // Raw pixel data
@@ -88,27 +87,27 @@ void clear_color_buffer(uint32_t color) {
   }
 }
 
-bool is_valid_pixel(int x, int y) {
+bool inline is_valid_pixel(int x, int y) {
   return x < window_width && y < window_height && x >= 0 && y >= 0;
 }
 void draw_pixel(int x, int y, uint32_t color) {
   if (is_valid_pixel(x, y)) {
     color_buffer[get_pixel(x, y)] = color;
-  } else {
-    fprintf(stderr, "WARNING: Attempted to draw at incorrect pixel position {%d, %d}.", x ,y);
   }
 }
 void draw_rect(int x, int y, int width, int height, uint32_t color) {
-  for (int row = y; row < height; row++) {
-    for (int col = x; col < width; col++) {
-      draw_pixel(col, row, color);
+  for (int row = 0; row < height; row++) {
+    for (int col = 0; col < width; col++) {
+      draw_pixel(col + x, row + y, color);
     }
   }
 }
 void draw_grid(void) {
   for (int y = 0; y < window_height; y++) {
-    for (int x = 0; x < window_height; x++) {
-      draw_pixel(x, y, 0xFF444444);
+    for (int x = 0; x < window_width; x++) {
+      if (x % 50 == 0 || y % 50 == 0) {
+        draw_pixel(x, y, 0xFF444444);
+      }
     }
   }
 }
