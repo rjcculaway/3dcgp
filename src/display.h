@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include <SDL.h>
 
+#define FPS 30
+#define FRAME_TIME (1000 / FPS)
+
 /**
  * Display
  * Contains functions for displaying the window and the color buffer.

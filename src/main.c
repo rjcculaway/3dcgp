@@ -16,15 +16,17 @@ vec3_t cube_rotation = {.x = 0, .y = 0, .z = 0};
 float fov_factor = 360;
 
 bool is_running = false;
+uint64_t previous_frame_time = 0;
 
 bool setup(void)
 {
   // Allocate memory for the color buffer
+  // This is a contiguous block of memory but we will interpret it as a 2D array
   color_buffer = (uint32_t *)malloc(sizeof(uint32_t) * window_width * window_height);
 
   if (color_buffer == NULL)
   {
-    fprintf(stderr, "ERROR: Failed to allocated memory for the color buffer.");
+    fprintf(stderr, "ERROR: Failed to allocate memory for the color buffer.");
     return false;
   }
 
@@ -111,6 +113,15 @@ vec2_t project(vec3_t point)
 
 void update(void)
 {
+  // Determine if we still have time to wait before the next frame
+  uint64_t time_to_wait = FRAME_TIME - (SDL_GetTicks64() - previous_frame_time);
+  if (time_to_wait > 0 && time_to_wait <= FRAME_TIME)
+  {
+    SDL_Delay(time_to_wait); // Delay update until enough time has passed.
+  }
+
+  previous_frame_time = SDL_GetTicks64();
+
   cube_rotation.x += 0.005;
   cube_rotation.y += 0.01;
   cube_rotation.z += 0.005;
@@ -119,9 +130,11 @@ void update(void)
     // Transform then project
     vec3_t point = cube_points[i];
     vec3_t transformed_point = point;
+    // Rotate
     transformed_point = vec3_rotate_x(transformed_point, cube_rotation.x);
     transformed_point = vec3_rotate_y(transformed_point, cube_rotation.y);
     transformed_point = vec3_rotate_z(transformed_point, cube_rotation.z);
+    // Translate
     transformed_point.z -= camera_position.z;
     transformed_point.y -= camera_position.y;
     transformed_point.x -= camera_position.x;
