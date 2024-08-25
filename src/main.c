@@ -158,15 +158,30 @@ void render(void)
   for (int i = 0; i < N_MESH_FACES; i++)
   {
     triangle_t triangle = triangles_to_render[i];
-    for (int j = 0; j < 3; j++)
-    {
-      draw_rect(
-          triangle.points[j].x,
-          triangle.points[j].y,
-          4,
-          4,
-          0xFFFFFF00);
-    }
+    int x0 = triangle.points[0].x;
+    int x1 = triangle.points[1].x;
+    int x2 = triangle.points[2].x;
+    int y0 = triangle.points[0].y;
+    int y1 = triangle.points[1].y;
+    int y2 = triangle.points[2].y;
+
+    draw_triangle(
+        x0,
+        x1,
+        x2,
+        y0,
+        y1,
+        y2,
+        0xFFFFFFFF);
+    // for (int j = 0; j < 3; j++)
+    // {
+    //   draw_rect(
+    //       triangle.points[j].x,
+    //       triangle.points[j].y,
+    //       4,
+    //       4,
+    //       0xFFFFFF00);
+    // }
   }
 
   render_color_buffer();

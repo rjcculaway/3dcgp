@@ -128,3 +128,33 @@ void draw_grid(void)
     }
   }
 }
+// Digital Differential Analyzer algorithm for drawing lines
+void draw_line(int x0, int x1, int y0, int y1, uint32_t color)
+{
+  int delta_x = x1 - x0;
+  int delta_y = y1 - y0;
+
+  // Get the longest side
+  int longest_side_length = abs(delta_x) >= abs(delta_y) ? abs(delta_x) : abs(delta_y);
+
+  // Find out how much we should increment in both x and y each step
+  float x_inc = delta_x / (float)longest_side_length;
+  float y_inc = delta_y / (float)longest_side_length;
+
+  float x_i = x0;
+  float y_i = y0;
+
+  for (int i = 0; i <= longest_side_length; i++)
+  {
+    draw_pixel(round(x_i), round(y_i), color);
+    x_i += x_inc;
+    y_i += y_inc;
+  }
+}
+
+void draw_triangle(int x0, int x1, int x2, int y0, int y1, int y2, uint32_t color)
+{
+  draw_line(x0, x1, y0, y1, color);
+  draw_line(x1, x2, y1, y2, color);
+  draw_line(x2, x0, y2, y0, color);
+}
