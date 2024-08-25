@@ -58,8 +58,6 @@ bool initialize_window(void)
 }
 void destroy_window(void)
 {
-  free(color_buffer);
-  color_buffer = NULL;
 
   SDL_DestroyRenderer(renderer);
   renderer = NULL;

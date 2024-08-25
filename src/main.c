@@ -11,7 +11,6 @@
 triangle_t *triangles_to_render = NULL;
 
 vec3_t camera_position = {.x = 0, .y = 0, .z = -5};
-vec3_t cube_rotation = {.x = 0, .y = 0, .z = 0};
 
 float fov_factor = 360;
 
@@ -37,6 +36,9 @@ bool setup(void)
       SDL_TEXTUREACCESS_STREAMING, // Changes will automatically update the texture
       window_width,
       window_height);
+
+  // Load mesh data for a cube
+  load_cube_mesh_data();
 
   return true;
 }
@@ -110,18 +112,18 @@ void update(void)
 
   previous_frame_time = SDL_GetTicks64();
 
-  cube_rotation.x += 0.005;
-  cube_rotation.y += 0.01;
-  cube_rotation.z += 0.005;
+  mesh.rotation.x += 0.005;
+  mesh.rotation.y += 0.01;
+  mesh.rotation.z += 0.005;
 
-  for (int i = 0; i < N_MESH_FACES; i++)
+  for (int i = 0; i < array_length(mesh.faces); i++)
   {
-    face_t face = mesh_faces[i];
+    face_t face = mesh.faces[i];
 
     vec3_t face_vertices[3];
-    face_vertices[0] = mesh_vertices[face.a - 1];
-    face_vertices[1] = mesh_vertices[face.b - 1];
-    face_vertices[2] = mesh_vertices[face.c - 1];
+    face_vertices[0] = mesh.vertices[face.a - 1];
+    face_vertices[1] = mesh.vertices[face.b - 1];
+    face_vertices[2] = mesh.vertices[face.c - 1];
 
     triangle_t projected_triangle;
 
@@ -130,9 +132,9 @@ void update(void)
     {
       vec3_t transformed_vertex = face_vertices[j];
       // Rotate
-      transformed_vertex = vec3_rotate_x(transformed_vertex, cube_rotation.x);
-      transformed_vertex = vec3_rotate_y(transformed_vertex, cube_rotation.y);
-      transformed_vertex = vec3_rotate_z(transformed_vertex, cube_rotation.z);
+      transformed_vertex = vec3_rotate_x(transformed_vertex, mesh.rotation.x);
+      transformed_vertex = vec3_rotate_y(transformed_vertex, mesh.rotation.y);
+      transformed_vertex = vec3_rotate_z(transformed_vertex, mesh.rotation.z);
       // Translate
       transformed_vertex.x -= camera_position.x;
       transformed_vertex.y -= camera_position.y;
@@ -177,15 +179,6 @@ void render(void)
         y1,
         y2,
         0xFFFFFFFF);
-    // for (int j = 0; j < 3; j++)
-    // {
-    //   draw_rect(
-    //       triangle.points[j].x,
-    //       triangle.points[j].y,
-    //       4,
-    //       4,
-    //       0xFFFFFF00);
-    // }
   }
 
   // Clear the triangle dynamic array
@@ -195,6 +188,14 @@ void render(void)
   clear_color_buffer(0xFF000000);
 
   SDL_RenderPresent(renderer);
+}
+
+void free_resources(void)
+{
+  free(color_buffer);
+  color_buffer = NULL;
+  array_free(mesh.faces);
+  array_free(mesh.vertices);
 }
 
 int main(void)
@@ -221,7 +222,7 @@ int main(void)
     update();
     render();
   }
-  array_free(triangles_to_render);
+  free_resources();
   destroy_window();
 
   return 0;
