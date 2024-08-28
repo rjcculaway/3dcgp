@@ -10,7 +10,7 @@
 
 triangle_t *triangles_to_render = NULL;
 
-vec3_t camera_position = {.x = 0, .y = 0, .z = -5};
+vec3_t camera_position = {.x = 0, .y = 0, .z = 0};
 
 float fov_factor = 360;
 
@@ -127,6 +127,8 @@ void update(void)
 
     triangle_t projected_triangle;
 
+    vec3_t transformed_vertices[3];
+
     // Apply transformations and projection to each vertex of this face
     for (int j = 0; j < 3; j++)
     {
@@ -136,11 +138,36 @@ void update(void)
       transformed_vertex = vec3_rotate_y(transformed_vertex, mesh.rotation.y);
       transformed_vertex = vec3_rotate_z(transformed_vertex, mesh.rotation.z);
       // Translate
-      transformed_vertex.x -= camera_position.x;
-      transformed_vertex.y -= camera_position.y;
-      transformed_vertex.z -= camera_position.z;
+      transformed_vertex.x += 0;
+      transformed_vertex.y += 0;
+      transformed_vertex.z += 5;
+
+      transformed_vertices[j] = transformed_vertex;
+    }
+
+    // Backface Culling
+    /*   A   */
+    /*  / \  */
+    /* B---C */
+    vec3_t vec_ab = vec3_sub(transformed_vertices[1], transformed_vertices[0]); // B - A
+    vec3_t vec_ac = vec3_sub(transformed_vertices[2], transformed_vertices[0]); // C - A
+
+    // Left-handed coordinate system (+z is away), so the order of the cross product
+    // must be b-a x a-b
+    vec3_t normal = vec3_cross(
+        vec_ab,
+        vec_ac);
+    vec3_t camera_ray = vec3_sub(camera_position, transformed_vertices[0]); // Vector from camera to point A
+    float dot = vec3_dot(normal, camera_ray);
+    if (dot < 0.0) // If dot < 0, then it should not be rendered
+    {
+      continue;
+    }
+
+    for (int j = 0; j < 3; j++)
+    {
       // Project
-      vec2_t projected_point = project(transformed_vertex);
+      vec2_t projected_point = project(transformed_vertices[j]);
 
       // Scale and translate projected points to the middle of the screen
       projected_point.x += window_width / 2;
