@@ -19,6 +19,7 @@ typedef struct mesh
 
 extern mesh_t mesh;
 
+void load_mesh_from_file(char *file_name);
 void load_cube_mesh_data(void);
 
 #endif

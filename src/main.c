@@ -37,8 +37,8 @@ bool setup(void)
       window_width,
       window_height);
 
-  // Load mesh data for a cube
-  load_cube_mesh_data();
+  // Load mesh data from file
+  load_mesh_from_file("./assets/f22.obj");
 
   return true;
 }
