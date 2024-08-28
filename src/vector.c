@@ -11,7 +11,7 @@ float vec2_length_sq(vec2_t v)
 
 float vec2_length(vec2_t v)
 {
-  return sqrtf(v.x * v.x + v.y * v.y);
+  return sqrt(v.x * v.x + v.y * v.y);
 }
 
 vec2_t vec2_add(vec2_t u, vec2_t v)
@@ -45,8 +45,8 @@ vec2_t vec2_mul(vec2_t v, float c)
 vec2_t vec2_div(vec2_t v, float c)
 {
   vec2_t result = {
-      .x = c / v.x,
-      .y = c / v.y,
+      .x = v.x / c,
+      .y = v.y / c,
   };
 
   return result;
@@ -55,6 +55,11 @@ vec2_t vec2_div(vec2_t v, float c)
 float vec2_dot(vec2_t u, vec2_t v)
 {
   return u.x * v.x + u.y * v.y;
+}
+
+vec2_t vec2_normalize(vec2_t v)
+{
+  return vec2_div(v, vec2_length(v));
 }
 
 /**
@@ -68,7 +73,7 @@ float vec3_length_sq(vec3_t v)
 
 float vec3_length(vec3_t v)
 {
-  return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
+  return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
 }
 
 vec3_t vec3_add(vec3_t u, vec3_t v)
@@ -104,9 +109,9 @@ vec3_t vec3_mul(vec3_t v, float c)
 vec3_t vec3_div(vec3_t v, float c)
 {
   vec3_t result = {
-      .x = c / v.x,
-      .y = c / v.y,
-      .z = c / v.z};
+      .x = v.x / c,
+      .y = v.y / c,
+      .z = v.z / c};
 
   return result;
 }
@@ -157,4 +162,9 @@ vec3_t vec3_cross(vec3_t u, vec3_t v)
       .z = u.x * v.y - u.y * v.x};
 
   return result;
+}
+
+vec3_t vec3_normalize(vec3_t v)
+{
+  return vec3_div(v, vec3_length(v));
 }

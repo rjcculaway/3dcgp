@@ -25,6 +25,7 @@ vec2_t vec2_sub(vec2_t u, vec2_t v);
 vec2_t vec2_mul(vec2_t v, float c);
 vec2_t vec2_div(vec2_t v, float c);
 float vec2_dot(vec2_t u, vec2_t v);
+vec2_t vec2_normalize(vec2_t v);
 
 // Vector 3D Functions
 vec3_t vec3_rotate_z(vec3_t v, float angle);
@@ -37,5 +38,6 @@ vec3_t vec3_sub(vec3_t u, vec3_t v);
 vec3_t vec3_div(vec3_t v, float c);
 float vec3_dot(vec3_t u, vec3_t v);
 vec3_t vec3_cross(vec3_t u, vec3_t v);
+vec3_t vec3_normalize(vec3_t v);
 
 #endif

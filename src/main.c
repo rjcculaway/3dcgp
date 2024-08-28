@@ -38,7 +38,7 @@ bool setup(void)
       window_height);
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/f22.obj");
+  load_mesh_from_file("./assets/cube.obj");
 
   return true;
 }
@@ -149,8 +149,8 @@ void update(void)
     /*   A   */
     /*  / \  */
     /* B---C */
-    vec3_t vec_ab = vec3_sub(transformed_vertices[1], transformed_vertices[0]); // B - A
-    vec3_t vec_ac = vec3_sub(transformed_vertices[2], transformed_vertices[0]); // C - A
+    vec3_t vec_ab = vec3_normalize(vec3_sub(transformed_vertices[1], transformed_vertices[0])); // B - A
+    vec3_t vec_ac = vec3_normalize(vec3_sub(transformed_vertices[2], transformed_vertices[0])); // C - A
 
     // Left-handed coordinate system (+z is away), so the order of the cross product
     // must be b-a x a-b
@@ -158,7 +158,11 @@ void update(void)
         vec_ab,
         vec_ac);
     vec3_t camera_ray = vec3_sub(camera_position, transformed_vertices[0]); // Vector from camera to point A
-    float dot = vec3_dot(normal, camera_ray);
+
+    // Normalize the face normal
+    vec3_t normalized_normal = vec3_normalize(normal);
+
+    float dot = vec3_dot(normalized_normal, camera_ray);
     if (dot < 0.0) // If dot < 0, then it should not be rendered
     {
       continue;
