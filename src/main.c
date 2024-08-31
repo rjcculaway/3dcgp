@@ -24,7 +24,7 @@ bool setup(void)
 {
   // Allocate memory for the color buffer
   // This is a contiguous block of memory but we will interpret it as a 2D array
-  color_buffer = (uint32_t *)malloc(sizeof(uint32_t) * window_width * window_height);
+  color_buffer = (color_t *)malloc(sizeof(color_t) * window_width * window_height);
 
   if (color_buffer == NULL)
   {

@@ -22,7 +22,7 @@ void sort_three_vertices_by_y(int vertices[3][2]) // Insertion Sort
 }
 
 // Draw a filled triangle with a flat bottom
-void fill_flat_bottom_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color)
+void fill_flat_bottom_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color)
 {
   float inv_slope1 = ((float)(x1 - x0)) / (y1 - y0); // Inverse slope (run over rise), because in this case y is the independent value
   float inv_slope2 = ((float)(x2 - x0)) / (y2 - y0);
@@ -50,7 +50,7 @@ void fill_flat_bottom_triangle(int x0, int y0, int x1, int y1, int x2, int y2, u
 //           \/                                         //
 //        (x2,y2)                                       //
 //------------------------------------------------------//
-void fill_flat_top_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color)
+void fill_flat_top_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color)
 {
   float inv_slope1 = ((float)(x2 - x0)) / (y2 - y0); // Inverse slope (run over rise), because in this case y is the independent value
   float inv_slope2 = ((float)(x2 - x1)) / (y2 - y1);
@@ -65,7 +65,7 @@ void fill_flat_top_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint
   }
 }
 
-void draw_filled_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color)
+void draw_filled_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color)
 {
   int vertices[3][2] = {
       {x0, y0},

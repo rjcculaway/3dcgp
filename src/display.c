@@ -5,7 +5,7 @@ int window_height = 900;
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
-uint32_t *color_buffer = NULL;            // Raw pixel data
+color_t *color_buffer = NULL;             // Raw pixel data
 SDL_Texture *color_buffer_texture = NULL; // Texture to be displayed to the render target
 
 size_t inline get_pixel(const size_t x, const size_t y)
@@ -76,14 +76,14 @@ void render_color_buffer(void)
       color_buffer_texture,
       NULL,
       color_buffer,
-      (int)(window_width * sizeof(uint32_t)));
+      (int)(window_width * sizeof(color_t)));
   SDL_RenderCopy(renderer, color_buffer_texture, NULL, NULL);
 }
 /**
  * Fills the buffer with a color.
  * @param color The color (in ARGB8888 format) to fill the color buffer with.
  */
-void clear_color_buffer(uint32_t color)
+void clear_color_buffer(color_t color)
 {
   for (int y = 0; y < window_height; y++)
   {
@@ -98,14 +98,14 @@ bool inline is_valid_pixel(int x, int y)
 {
   return x < window_width && y < window_height && x >= 0 && y >= 0;
 }
-void draw_pixel(int x, int y, uint32_t color)
+void draw_pixel(int x, int y, color_t color)
 {
   if (is_valid_pixel(x, y))
   {
     color_buffer[get_pixel(x, y)] = color;
   }
 }
-void draw_rect(int x, int y, int width, int height, uint32_t color)
+void draw_rect(int x, int y, int width, int height, color_t color)
 {
   for (int current_x = 0; current_x < width; current_x++)
   {
@@ -129,7 +129,7 @@ void draw_grid(void)
   }
 }
 // Digital Differential Analyzer algorithm for drawing lines
-void draw_line(int x0, int y0, int x1, int y1, uint32_t color)
+void draw_line(int x0, int y0, int x1, int y1, color_t color)
 {
   int delta_x = x1 - x0;
   int delta_y = y1 - y0;
@@ -152,7 +152,7 @@ void draw_line(int x0, int y0, int x1, int y1, uint32_t color)
   }
 }
 
-void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color)
+void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color)
 {
   draw_line(x0,
             y0,
