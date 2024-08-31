@@ -8,6 +8,9 @@
 #include "mesh.h"
 #include "array.h"
 
+render_method current_render_method = RENDER_TRIANGLE;
+culling_option current_culling_option = CULLING_BACKFACE;
+
 triangle_t *triangles_to_render = NULL;
 
 vec3_t camera_position = {.x = 0, .y = 0, .z = 0};
@@ -55,25 +58,41 @@ void process_input(void)
     is_running = false;
     break;
   case SDL_KEYDOWN:
-    if (event.key.keysym.sym == SDLK_ESCAPE)
+    switch (event.key.keysym.sym)
     {
+    case SDLK_ESCAPE:
       is_running = false;
-    }
-    if (event.key.keysym.sym == SDLK_UP)
-    {
+      break;
+    case SDLK_UP:
       camera_position.z -= 0.1;
-    }
-    if (event.key.keysym.sym == SDLK_DOWN)
-    {
+      break;
+    case SDLK_DOWN:
       camera_position.z += 0.1;
-    }
-    if (event.key.keysym.sym == SDLK_LEFT)
-    {
+      break;
+    case SDLK_LEFT:
       camera_position.x -= 0.1;
-    }
-    if (event.key.keysym.sym == SDLK_RIGHT)
-    {
+      break;
+    case SDLK_RIGHT:
       camera_position.x += 0.1;
+      break;
+    case SDLK_1:
+      current_render_method = RENDER_WIREFRAME_DOT;
+      break;
+    case SDLK_2:
+      current_render_method = RENDER_WIREFRAME;
+      break;
+    case SDLK_3:
+      current_render_method = RENDER_TRIANGLE;
+      break;
+    case SDLK_4:
+      current_render_method = RENDER_WIREFRAME_TRIANGLE;
+      break;
+    case SDLK_c:
+      current_culling_option = CULLING_BACKFACE;
+      break;
+    case SDLK_d:
+      current_culling_option = CULLING_NONE;
+      break;
     }
     break;
   default:
@@ -145,6 +164,8 @@ void update(void)
       transformed_vertices[j] = transformed_vertex;
     }
 
+    bool shouldCull = false;
+
     // Backface Culling
     /*   A   */
     /*  / \  */
@@ -163,7 +184,22 @@ void update(void)
     vec3_t normalized_normal = vec3_normalize(normal);
 
     float dot = vec3_dot(normalized_normal, camera_ray);
-    if (dot < 0.0) // If dot < 0, then it should not be rendered
+
+    switch (current_culling_option)
+    {
+    case CULLING_NONE:
+      break;
+    case CULLING_BACKFACE:
+      if (dot < 0.0) // If dot < 0, then it should not be rendered
+      {
+        shouldCull = true;
+      }
+      break;
+    default:
+      fprintf(stderr, "WARNING: Invalid culling option selected!");
+      break;
+    }
+    if (shouldCull)
     {
       continue;
     }
@@ -202,22 +238,64 @@ void render(void)
     int y1 = triangle.points[1].y;
     int y2 = triangle.points[2].y;
 
-    draw_filled_triangle(
-        x0,
-        y0,
-        x1,
-        y1,
-        x2,
-        y2,
-        0xFFFFFFFF);
-    draw_triangle(
-        x0,
-        y0,
-        x1,
-        y1,
-        x2,
-        y2,
-        0xFF000000);
+    switch (current_render_method)
+    {
+    case RENDER_WIREFRAME:
+      draw_triangle(
+          x0,
+          y0,
+          x1,
+          y1,
+          x2,
+          y2,
+          0xFFFFFFFF);
+      break;
+    case RENDER_WIREFRAME_DOT:
+      draw_triangle(
+          x0,
+          y0,
+          x1,
+          y1,
+          x2,
+          y2,
+          0xFFFFFFFF);
+      const int point_size = 4;
+      draw_rect(x0 - point_size / 2, y0 - point_size / 2, point_size, point_size, 0xFFFF0000);
+      draw_rect(x1 - point_size / 2, y1 - point_size / 2, point_size, point_size, 0xFFFF0000);
+      draw_rect(x2 - point_size / 2, y2 - point_size / 2, point_size, point_size, 0xFFFF0000);
+      break;
+    case RENDER_WIREFRAME_TRIANGLE:
+      draw_filled_triangle(
+          x0,
+          y0,
+          x1,
+          y1,
+          x2,
+          y2,
+          0xFFFFFFFF);
+      draw_triangle(
+          x0,
+          y0,
+          x1,
+          y1,
+          x2,
+          y2,
+          0xFF000000);
+      break;
+    case RENDER_TRIANGLE:
+      draw_filled_triangle(
+          x0,
+          y0,
+          x1,
+          y1,
+          x2,
+          y2,
+          0xFFFFFFFF);
+      break;
+    default:
+      fprintf(stderr, "WARNING: Invalid culling option selected!");
+      break;
+    }
   }
 
   // Clear the triangle dynamic array

@@ -16,6 +16,20 @@
  * Contains functions for displaying the window and the color buffer.
  */
 
+typedef enum render_method
+{
+  RENDER_WIREFRAME,
+  RENDER_WIREFRAME_DOT,
+  RENDER_WIREFRAME_TRIANGLE,
+  RENDER_TRIANGLE,
+} render_method;
+
+typedef enum culling_option
+{
+  CULLING_NONE,
+  CULLING_BACKFACE
+} culling_option;
+
 extern int window_width;
 extern int window_height;
 
