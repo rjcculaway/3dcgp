@@ -41,7 +41,9 @@ bool setup(void)
       window_height);
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/cube.obj");
+  // load_mesh_from_file("./assets/cube.obj");
+  load_cube_mesh_data();
+  printf("vertices: %d, faces: %d\n", array_length(mesh.vertices), array_length(mesh.faces));
 
   return true;
 }
@@ -144,8 +146,6 @@ void update(void)
     face_vertices[1] = mesh.vertices[face.b - 1];
     face_vertices[2] = mesh.vertices[face.c - 1];
 
-    triangle_t projected_triangle;
-
     vec3_t transformed_vertices[3];
 
     // Apply transformations and projection to each vertex of this face
@@ -204,17 +204,22 @@ void update(void)
       continue;
     }
 
+    vec2_t projected_points[3];
     for (int j = 0; j < 3; j++)
     {
       // Project
-      vec2_t projected_point = project(transformed_vertices[j]);
+      projected_points[j] = project(transformed_vertices[j]);
 
       // Scale and translate projected points to the middle of the screen
-      projected_point.x += window_width / 2;
-      projected_point.y += window_height / 2;
-
-      projected_triangle.points[j] = projected_point;
+      projected_points[j].x += window_width / 2;
+      projected_points[j].y += window_height / 2;
     }
+    triangle_t projected_triangle = {
+        .points = {
+            {.x = projected_points[0].x, projected_points[0].y},
+            {.x = projected_points[1].x, projected_points[1].y},
+            {.x = projected_points[2].x, projected_points[2].y}},
+        .color = face.color};
     array_push(triangles_to_render, projected_triangle);
   }
 }
@@ -248,7 +253,7 @@ void render(void)
           y1,
           x2,
           y2,
-          0xFFFFFFFF);
+          triangle.color);
       break;
     case RENDER_WIREFRAME_DOT:
       draw_triangle(
@@ -258,7 +263,7 @@ void render(void)
           y1,
           x2,
           y2,
-          0xFFFFFFFF);
+          triangle.color);
       const int point_size = 4;
       draw_rect(x0 - point_size / 2, y0 - point_size / 2, point_size, point_size, 0xFFFF0000);
       draw_rect(x1 - point_size / 2, y1 - point_size / 2, point_size, point_size, 0xFFFF0000);
@@ -272,7 +277,7 @@ void render(void)
           y1,
           x2,
           y2,
-          0xFFFFFFFF);
+          triangle.color);
       draw_triangle(
           x0,
           y0,
@@ -290,7 +295,7 @@ void render(void)
           y1,
           x2,
           y2,
-          0xFFFFFFFF);
+          triangle.color);
       break;
     default:
       fprintf(stderr, "WARNING: Invalid culling option selected!");

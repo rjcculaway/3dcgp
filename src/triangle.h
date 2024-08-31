@@ -11,11 +11,13 @@ typedef struct face
   int a;
   int b;
   int c;
+  color_t color;
 } face_t;
 
 typedef struct triangle
 {
   vec2_t points[3];
+  color_t color;
 } triangle_t;
 
 void sort_three_vertices_by_y(int vertices[3][2]);
