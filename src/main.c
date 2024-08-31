@@ -202,14 +202,22 @@ void render(void)
     int y1 = triangle.points[1].y;
     int y2 = triangle.points[2].y;
 
-    draw_triangle(
+    draw_filled_triangle(
         x0,
-        x1,
-        x2,
         y0,
+        x1,
         y1,
+        x2,
         y2,
         0xFFFFFFFF);
+    draw_triangle(
+        x0,
+        y0,
+        x1,
+        y1,
+        x2,
+        y2,
+        0xFF000000);
   }
 
   // Clear the triangle dynamic array
@@ -253,6 +261,7 @@ int main(void)
     update();
     render();
   }
+
   free_resources();
   destroy_window();
 

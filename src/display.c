@@ -26,6 +26,8 @@ bool initialize_window(void)
 
   window_width = display_mode.w;
   window_height = display_mode.h;
+  // window_width = 800;
+  // window_height = 600;
 
   // Create an SDL Window
   window = SDL_CreateWindow(
@@ -34,7 +36,7 @@ bool initialize_window(void)
       SDL_WINDOWPOS_CENTERED, // pos y
       window_width,           // width
       window_height,          // height
-      SDL_WINDOW_BORDERLESS);
+      SDL_WINDOW_ALWAYS_ON_TOP);
   if (!window)
   {
     fprintf(stderr, "ERROR: Failed reating SDL window.\n");
@@ -52,7 +54,7 @@ bool initialize_window(void)
     return false;
   }
 
-  SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+  // SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
   return true;
 }
@@ -127,7 +129,7 @@ void draw_grid(void)
   }
 }
 // Digital Differential Analyzer algorithm for drawing lines
-void draw_line(int x0, int x1, int y0, int y1, uint32_t color)
+void draw_line(int x0, int y0, int x1, int y1, uint32_t color)
 {
   int delta_x = x1 - x0;
   int delta_y = y1 - y0;
@@ -150,9 +152,19 @@ void draw_line(int x0, int x1, int y0, int y1, uint32_t color)
   }
 }
 
-void draw_triangle(int x0, int x1, int x2, int y0, int y1, int y2, uint32_t color)
+void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uint32_t color)
 {
-  draw_line(x0, x1, y0, y1, color);
-  draw_line(x1, x2, y1, y2, color);
-  draw_line(x2, x0, y2, y0, color);
+  draw_line(x0,
+            y0,
+            x1,
+            y1,
+            color);
+  draw_line(x1,
+            y1,
+            x2,
+            y2, color);
+  draw_line(x2,
+            y2,
+            x0,
+            y0, color);
 }
