@@ -7,6 +7,7 @@
 #include "vector.h"
 #include "mesh.h"
 #include "array.h"
+#include "utils.h"
 
 render_method current_render_method = RENDER_TRIANGLE;
 culling_option current_culling_option = CULLING_BACKFACE;
@@ -214,14 +215,21 @@ void update(void)
       projected_points[j].x += window_width / 2;
       projected_points[j].y += window_height / 2;
     }
+
+    // For now, this is the average depth of the vertices. This is a naive approach.
+    float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0;
     triangle_t projected_triangle = {
         .points = {
             {.x = projected_points[0].x, projected_points[0].y},
             {.x = projected_points[1].x, projected_points[1].y},
             {.x = projected_points[2].x, projected_points[2].y}},
-        .color = face.color};
+        .color = face.color,
+        .depth = avg_depth};
     array_push(triangles_to_render, projected_triangle);
   }
+
+  // Sort the triangles by depth in ascending order
+  mergesort_triangle_by_depth(triangles_to_render);
 }
 
 void render(void)

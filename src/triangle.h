@@ -18,6 +18,7 @@ typedef struct triangle
 {
   vec2_t points[3];
   color_t color;
+  float depth;
 } triangle_t;
 
 void sort_three_vertices_by_y(int vertices[3][2]);
