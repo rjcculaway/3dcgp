@@ -5,6 +5,7 @@
 
 #include "display.h"
 #include "vector.h"
+#include "matrix.h"
 #include "mesh.h"
 #include "array.h"
 #include "utils.h"
@@ -138,6 +139,11 @@ void update(void)
   mesh.rotation.y += 0.01;
   mesh.rotation.z += 0.005;
 
+  mesh.scale.x += 0.002;
+
+  // Create a scale matrix
+  mat4_t scale_mat = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.y);
+
   for (int i = 0; i < array_length(mesh.faces); i++)
   {
     face_t face = mesh.faces[i];
@@ -147,16 +153,16 @@ void update(void)
     face_vertices[1] = mesh.vertices[face.b - 1];
     face_vertices[2] = mesh.vertices[face.c - 1];
 
-    vec3_t transformed_vertices[3];
+    vec4_t transformed_vertices[3];
 
     // Apply transformations and projection to each vertex of this face
     for (int j = 0; j < 3; j++)
     {
-      vec3_t transformed_vertex = face_vertices[j];
-      // Rotate
-      transformed_vertex = vec3_rotate_x(transformed_vertex, mesh.rotation.x);
-      transformed_vertex = vec3_rotate_y(transformed_vertex, mesh.rotation.y);
-      transformed_vertex = vec3_rotate_z(transformed_vertex, mesh.rotation.z);
+      vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
+
+      // TODO: Use matrices to perform transformations
+      // Scale
+      transformed_vertex = mat4_matmul_vec(scale_mat, transformed_vertex);
       // Translate
       transformed_vertex.x += 0;
       transformed_vertex.y += 0;
@@ -171,15 +177,18 @@ void update(void)
     /*   A   */
     /*  / \  */
     /* B---C */
-    vec3_t vec_ab = vec3_normalize(vec3_sub(transformed_vertices[1], transformed_vertices[0])); // B - A
-    vec3_t vec_ac = vec3_normalize(vec3_sub(transformed_vertices[2], transformed_vertices[0])); // C - A
+    vec3_t vec_a = vec3_from_vec4(transformed_vertices[0]);
+    vec3_t vec_b = vec3_from_vec4(transformed_vertices[1]);
+    vec3_t vec_c = vec3_from_vec4(transformed_vertices[2]);
+    vec3_t vec_ab = vec3_normalize(vec3_sub(vec_b, vec_a)); // B - A
+    vec3_t vec_ac = vec3_normalize(vec3_sub(vec_c, vec_a)); // C - A
 
     // Left-handed coordinate system (+z is away), so the order of the cross product
     // must be b-a x a-b
     vec3_t normal = vec3_cross(
         vec_ab,
         vec_ac);
-    vec3_t camera_ray = vec3_sub(camera_position, transformed_vertices[0]); // Vector from camera to point A
+    vec3_t camera_ray = vec3_sub(camera_position, vec_a); // Vector from camera to point A
 
     // Normalize the face normal
     vec3_t normalized_normal = vec3_normalize(normal);
@@ -209,7 +218,7 @@ void update(void)
     for (int j = 0; j < 3; j++)
     {
       // Project
-      projected_points[j] = project(transformed_vertices[j]);
+      projected_points[j] = project((vec3_from_vec4(transformed_vertices[j])));
 
       // Scale and translate projected points to the middle of the screen
       projected_points[j].x += window_width / 2;

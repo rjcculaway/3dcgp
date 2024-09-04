@@ -16,6 +16,14 @@ typedef struct vec3
   float z;
 } vec3_t;
 
+typedef struct vec4
+{
+  float x;
+  float y;
+  float z;
+  float w;
+} vec4_t;
+
 // TODO: Declare functions for manipulating vectors
 // Vector 2D Functions
 float vec2_length_sq(vec2_t v);
@@ -40,4 +48,20 @@ float vec3_dot(vec3_t u, vec3_t v);
 vec3_t vec3_cross(vec3_t u, vec3_t v);
 vec3_t vec3_normalize(vec3_t v);
 
+// Vector 3D Functions
+vec4_t vec4_rotate_z(vec4_t v, float angle);
+vec4_t vec4_rotate_y(vec4_t v, float angle);
+vec4_t vec4_rotate_x(vec4_t v, float angle);
+float vec4_length_sq(vec4_t v);
+float vec4_length(vec4_t v);
+vec4_t vec4_add(vec4_t u, vec4_t v);
+vec4_t vec4_sub(vec4_t u, vec4_t v);
+vec4_t vec4_div(vec4_t v, float c);
+float vec4_dot(vec4_t u, vec4_t v);
+vec4_t vec4_cross(vec4_t u, vec4_t v);
+vec4_t vec4_normalize(vec4_t v);
+
+// Conversion Functions
+vec4_t vec4_from_vec3(vec3_t v);
+vec3_t vec3_from_vec4(vec4_t v);
 #endif

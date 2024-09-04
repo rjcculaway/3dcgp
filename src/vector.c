@@ -168,3 +168,137 @@ vec3_t vec3_normalize(vec3_t v)
 {
   return vec3_div(v, vec3_length(v));
 }
+
+/**
+ * Vector 4D
+ */
+
+// Converts a vec3_t to a vec4_t
+vec4_t vec4_from_vec3(vec3_t v)
+{
+  vec4_t u = {
+      .x = v.x,
+      .y = v.y,
+      .z = v.z,
+      .w = 1.0};
+  return u;
+}
+
+vec3_t vec3_from_vec4(vec4_t v)
+{
+  vec3_t u = {
+      .x = v.x,
+      .y = v.y,
+      .z = v.z};
+  return u;
+}
+
+float vec4_length_sq(vec4_t v)
+{
+  return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
+}
+
+float vec4_length(vec4_t v)
+{
+  return sqrt(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w);
+}
+
+vec4_t vec4_add(vec4_t u, vec4_t v)
+{
+  vec4_t result = {
+      .x = u.x + v.x,
+      .y = u.y + v.y,
+      .z = u.z + v.z,
+      .w = u.w + v.w,
+  };
+  return result;
+}
+
+vec4_t vec4_sub(vec4_t u, vec4_t v)
+{
+  vec4_t result = {
+      .x = u.x - v.x,
+      .y = u.y - v.y,
+      .z = u.z - v.z,
+      .w = u.w - v.w,
+  };
+  return result;
+}
+
+vec4_t vec4_mul(vec4_t v, float c)
+{
+  vec4_t result = {
+      .x = c * v.x,
+      .y = c * v.y,
+      .z = c * v.z,
+      .w = c * v.w};
+
+  return result;
+}
+
+vec4_t vec4_div(vec4_t v, float c)
+{
+  vec4_t result = {
+      .x = v.x / c,
+      .y = v.y / c,
+      .z = v.z / c,
+      .w = v.w / c};
+
+  return result;
+}
+
+float vec4_dot(vec4_t u, vec4_t v)
+{
+  return u.x * v.x + u.y * v.y + u.z * v.z + u.w * v.w;
+}
+
+vec4_t vec4_rotate_x(vec4_t v, float angle)
+{
+  float cos_angle = cos(angle);
+  float sin_angle = sin(angle);
+  vec4_t rotated_vector = {
+      .x = v.x,
+      .y = v.y * cos_angle - v.z * sin_angle,
+      .z = v.y * sin_angle + v.z * cos_angle,
+      .w = v.w};
+  return rotated_vector;
+}
+
+vec4_t vec4_rotate_y(vec4_t v, float angle)
+{
+  float cos_angle = cos(angle);
+  float sin_angle = sin(angle);
+  vec4_t rotated_vector = {
+      .x = v.x * cos_angle - v.z * sin_angle,
+      .y = v.y,
+      .z = v.x * sin_angle + v.z * cos_angle,
+      .w = v.w};
+  return rotated_vector;
+}
+
+vec4_t vec4_rotate_z(vec4_t v, float angle)
+{
+  float cos_angle = cos(angle);
+  float sin_angle = sin(angle);
+  vec4_t rotated_vector = {
+      .x = v.x * cos_angle - v.y * sin_angle,
+      .y = v.x * sin_angle + v.y * cos_angle,
+      .z = v.z,
+      .w = v.w};
+  return rotated_vector;
+}
+
+vec4_t vec4_cross(vec4_t u, vec4_t v)
+{
+  vec4_t result = {
+      .x = u.y * v.z - u.z * v.y,
+      .y = u.z * v.x - u.x * v.z,
+      .z = u.x * v.y - u.y * v.x,
+      .w = u.w};
+  return result;
+}
+
+vec4_t vec4_normalize(vec4_t v)
+{
+  return vec4_div(v, vec4_length(v));
+}

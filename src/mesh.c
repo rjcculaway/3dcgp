@@ -39,7 +39,10 @@ face_t cube_faces[N_CUBE_FACES] = {
 mesh_t mesh = {
     .vertices = NULL,
     .faces = NULL,
-    .rotation = {0, 0, 0}};
+    .rotation = {0, 0, 0},
+    .scale = {1.0, 1.0, 1.0},
+    .translation = {0.0, 0.0, 0.0},
+};
 
 void load_mesh_from_file(char *file_name)
 {
