@@ -167,12 +167,18 @@ void update(void)
     {
       vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
 
-      // Scale
-      transformed_vertex = mat4_matmul_vec(scale_mat, transformed_vertex);
-      transformed_vertex = mat4_matmul_vec(rotation_x_mat, transformed_vertex);
-      transformed_vertex = mat4_matmul_vec(rotation_y_mat, transformed_vertex);
-      transformed_vertex = mat4_matmul_vec(rotation_z_mat, transformed_vertex);
-      transformed_vertex = mat4_matmul_vec(translation_mat, transformed_vertex);
+      // Create a world matrix to combine the three transformations
+      mat4_t world_matrix = mat4_identity();
+
+      // Multiply the transformations to the world matrix
+      world_matrix = mat4_matmul_mat4(scale_mat, world_matrix);
+      world_matrix = mat4_matmul_mat4(rotation_z_mat, world_matrix);
+      world_matrix = mat4_matmul_mat4(rotation_y_mat, world_matrix);
+      world_matrix = mat4_matmul_mat4(rotation_x_mat, world_matrix);
+      world_matrix = mat4_matmul_mat4(translation_mat, world_matrix);
+
+      // Multiply the world matrix to the original vector
+      transformed_vertex = mat4_matmul_vec(world_matrix, transformed_vertex);
 
       transformed_vertices[j] = transformed_vertex;
     }

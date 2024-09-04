@@ -53,6 +53,25 @@ vec4_t mat4_matmul_vec(mat4_t m, vec4_t v)
   return result;
 }
 
+mat4_t mat4_matmul_mat4(mat4_t a, mat4_t b)
+{
+  mat4_t product;
+
+  for (int i = 0; i < 4; i++)
+  {
+    for (int j = 0; j < 4; j++)
+    {
+      product.m[i][j] = 0;
+      for (int k = 0; k < 4; k++)
+      {
+        product.m[i][j] += a.m[i][k] * b.m[k][j];
+      }
+    }
+  }
+
+  return product;
+}
+
 mat4_t mat4_make_translation(float tx, float ty, float tz)
 {
   // | 0  0  0  tx |
