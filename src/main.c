@@ -140,9 +140,16 @@ void update(void)
   mesh.rotation.z += 0.005;
 
   mesh.scale.x += 0.002;
+  mesh.scale.y += 0.001;
+  mesh.translation.x += 0.01;
+  mesh.translation.z = 5.0;
 
-  // Create a scale matrix
+  // Create a scale, rotation, translation matrix
   mat4_t scale_mat = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.y);
+  mat4_t rotation_x_mat = mat4_make_rotation_x(mesh.rotation.x);
+  mat4_t rotation_y_mat = mat4_make_rotation_y(mesh.rotation.y);
+  mat4_t rotation_z_mat = mat4_make_rotation_z(mesh.rotation.z);
+  mat4_t translation_mat = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
 
   for (int i = 0; i < array_length(mesh.faces); i++)
   {
@@ -160,13 +167,12 @@ void update(void)
     {
       vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
 
-      // TODO: Use matrices to perform transformations
       // Scale
       transformed_vertex = mat4_matmul_vec(scale_mat, transformed_vertex);
-      // Translate
-      transformed_vertex.x += 0;
-      transformed_vertex.y += 0;
-      transformed_vertex.z += 5;
+      transformed_vertex = mat4_matmul_vec(rotation_x_mat, transformed_vertex);
+      transformed_vertex = mat4_matmul_vec(rotation_y_mat, transformed_vertex);
+      transformed_vertex = mat4_matmul_vec(rotation_z_mat, transformed_vertex);
+      transformed_vertex = mat4_matmul_vec(translation_mat, transformed_vertex);
 
       transformed_vertices[j] = transformed_vertex;
     }
