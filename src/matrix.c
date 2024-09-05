@@ -139,3 +139,38 @@ mat4_t mat4_make_rotation_y(float angle)
 
   return m;
 }
+
+// Projection
+mat4_t mat4_make_perspective(float fov, float aspect, float z_near, float z_far)
+{
+  // | a / f  0      0      0          |
+  // | 0      1 / f  0      0          |
+  // | 0      0      l     -l * z_near |
+  // | 0      0      1      0          |
+  mat4_t m = mat4_identity();
+
+  float f = tan(fov / 2); // Half angle, will be inverted to show that the higher the fov, the smaller the objects
+  float lambda = z_far / (z_far - z_near);
+
+  m.m[0][0] = aspect / f;
+  m.m[1][1] = 1 / f;
+  m.m[2][2] = lambda;
+  m.m[2][3] = -lambda * z_near; // Normalize the z values
+  m.m[3][2] = 1.0;              // Store the unchanged z in w
+
+  return m;
+}
+
+vec4_t mat4_matmul_vec_project(mat4_t mat_proj, vec4_t v)
+{
+  vec4_t projected = mat4_matmul_vec(mat_proj, v);
+
+  // Perspective Divide
+  if (projected.w != 0.0)
+  {
+    projected.x /= projected.w;
+    projected.y /= projected.w;
+    projected.z /= projected.w;
+  }
+  return projected;
+}

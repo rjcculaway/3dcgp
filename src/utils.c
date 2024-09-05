@@ -53,3 +53,13 @@ void mergesort_triangle_by_depth(triangle_t *triangles)
   // }
   // printf("\n\n");
 }
+
+float inline deg_to_rad(float deg)
+{
+  return deg / 180 * M_PI;
+}
+
+float inline rad_to_deg(float rad)
+{
+  return rad / M_PI * 180;
+}

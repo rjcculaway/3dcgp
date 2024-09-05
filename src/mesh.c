@@ -67,6 +67,7 @@ void load_mesh_from_file(char *file_name)
       face_t face;
       sscanf(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &(face.a), &(face.b), &(face.c));
       array_push(mesh.faces, face);
+      face.color = 0xFFFFFFFF;
     }
   }
   fclose(file_handle);
