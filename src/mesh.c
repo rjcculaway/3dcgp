@@ -39,7 +39,6 @@ face_t cube_faces[N_CUBE_FACES] = {
 mesh_t mesh = {
     .vertices = NULL,
     .faces = NULL,
-    .normals = NULL,
     .rotation = {0, 0, 0},
     .scale = {1.0, 1.0, 1.0},
     .translation = {0.0, 0.0, 0.0},
@@ -63,16 +62,10 @@ void load_mesh_from_file(char *file_name)
       sscanf(line, "v %f %f %f", &(vertex.x), &(vertex.y), &(vertex.z));
       array_push(mesh.vertices, vertex);
     }
-    if (strncmp("vn ", line, 3) == 0) // vertex normals
-    {
-      vec3_t normal;
-      sscanf(line, "vn %f %f %f", &(normal.x), &(normal.y), &(normal.z));
-      array_push(mesh.normals, normal);
-    }
     if (strncmp("f ", line, 2) == 0) // faces, ignore other values (%*d) for now
     {
       face_t face;
-      sscanf(line, "f %d/%*d/%d %d/%*d/%d %d/%*d/%d", &(face.a), &(face.va), &(face.b), &(face.vb), &(face.c), &(face.vc));
+      sscanf(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &(face.a), &(face.b), &(face.c));
       array_push(mesh.faces, face);
       face.color = 0xFFFFFFFF;
     }

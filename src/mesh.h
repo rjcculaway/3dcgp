@@ -14,7 +14,6 @@ typedef struct mesh
 {
   vec3_t *vertices; // Dynamic
   face_t *faces;    // Dynamic
-  vec3_t *normals;  // Dynamic
   vec3_t rotation;
   vec3_t scale;
   vec3_t translation;
