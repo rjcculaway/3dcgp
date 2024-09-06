@@ -1,5 +1,5 @@
 #include "utils.h"
-#include <assert.h>
+
 void mergesort_triangle_merge(triangle_t *a, triangle_t *b, size_t n, size_t start, size_t mid, size_t end)
 {
   size_t i = start;
@@ -46,12 +46,6 @@ void mergesort_triangle_by_depth(triangle_t *triangles)
   free(b);
 
   assert(n == array_length(triangles));
-  // printf("\n");
-  // for (int i = 0; i < n; i++)
-  // {
-  //   printf("%f\t", triangles[i].depth);
-  // }
-  // printf("\n\n");
 }
 
 float inline deg_to_rad(float deg)
@@ -62,4 +56,9 @@ float inline deg_to_rad(float deg)
 float inline rad_to_deg(float rad)
 {
   return rad / M_PI * 180;
+}
+
+double fclamp(double minimum, double maximum, double value)
+{
+  return fmin(fmax(minimum, value), maximum);
 }

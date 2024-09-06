@@ -3,13 +3,14 @@
 #include <stdbool.h>
 #include <SDL.h>
 
+#include "utils.h"
 #include "array.h"
-#include "display.h"
 #include "vector.h"
 #include "matrix.h"
+#include "display.h"
 #include "mesh.h"
 #include "camera.h"
-#include "utils.h"
+#include "light.h"
 
 render_method current_render_method = RENDER_TRIANGLE;
 culling_option current_culling_option = CULLING_BACKFACE;
@@ -140,6 +141,16 @@ void update(void)
   mat4_t rotation_z_mat = mat4_make_rotation_z(mesh.rotation.z);
   mat4_t translation_mat = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
 
+  // Create a world matrix to combine the three transformations
+  mat4_t world_matrix = mat4_identity();
+
+  // Multiply the transformations to the world matrix
+  world_matrix = mat4_matmul_mat4(scale_mat, world_matrix);
+  world_matrix = mat4_matmul_mat4(rotation_z_mat, world_matrix);
+  world_matrix = mat4_matmul_mat4(rotation_y_mat, world_matrix);
+  world_matrix = mat4_matmul_mat4(rotation_x_mat, world_matrix);
+  world_matrix = mat4_matmul_mat4(translation_mat, world_matrix);
+
   for (int i = 0; i < array_length(mesh.faces); i++)
   {
     face_t face = mesh.faces[i];
@@ -155,16 +166,6 @@ void update(void)
     for (int j = 0; j < 3; j++)
     {
       vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
-
-      // Create a world matrix to combine the three transformations
-      mat4_t world_matrix = mat4_identity();
-
-      // Multiply the transformations to the world matrix
-      world_matrix = mat4_matmul_mat4(scale_mat, world_matrix);
-      world_matrix = mat4_matmul_mat4(rotation_z_mat, world_matrix);
-      world_matrix = mat4_matmul_mat4(rotation_y_mat, world_matrix);
-      world_matrix = mat4_matmul_mat4(rotation_x_mat, world_matrix);
-      world_matrix = mat4_matmul_mat4(translation_mat, world_matrix);
 
       // Multiply the world matrix to the original vector
       transformed_vertex = mat4_matmul_vec(world_matrix, transformed_vertex);
@@ -186,15 +187,12 @@ void update(void)
 
     // Left-handed coordinate system (+z is away), so the order of the cross product
     // must be b-a x a-b
-    vec3_t normal = vec3_cross(
+    vec3_t normal = vec3_normalize(vec3_cross(
         vec_ab,
-        vec_ac);
+        vec_ac));
     vec3_t camera_ray = vec3_sub(camera_position, vec_a); // Vector from camera to point A
 
-    // Normalize the face normal
-    vec3_t normalized_normal = vec3_normalize(normal);
-
-    float dot = vec3_dot(normalized_normal, camera_ray);
+    float dot = vec3_dot(normal, camera_ray);
 
     switch (current_culling_option)
     {
@@ -229,6 +227,9 @@ void update(void)
       projected_points[j].y += (window_height / 2.0);
     }
 
+    float light_intensity = light_lambertian(normal, sunlight.direction);
+    color_t final_color = light_apply_intensity(face.color, light_intensity);
+
     // For now, this is the average depth of the vertices. This is a naive approach.
     float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0;
     triangle_t projected_triangle = {
@@ -236,7 +237,7 @@ void update(void)
             {.x = projected_points[0].x, projected_points[0].y},
             {.x = projected_points[1].x, projected_points[1].y},
             {.x = projected_points[2].x, projected_points[2].y}},
-        .color = face.color,
+        .color = final_color,
         .depth = avg_depth};
     array_push(triangles_to_render, projected_triangle);
   }
