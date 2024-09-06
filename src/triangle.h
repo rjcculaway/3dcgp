@@ -11,12 +11,16 @@ typedef struct face
   int a;
   int b;
   int c;
+  int va;
+  int vb;
+  int vc;
   color_t color;
 } face_t;
 
 typedef struct triangle
 {
   vec2_t points[3];
+  vec3_t normals[3];
   color_t color;
   float depth;
 } triangle_t;
