@@ -136,7 +136,7 @@ void update(void)
 
   previous_frame_time = SDL_GetTicks64();
 
-  mesh.rotation.x += 0.005;
+  mesh.rotation.x += 0.01;
   // mesh.rotation.y += 0.01;
   // mesh.rotation.z += 0.005;
 
@@ -356,7 +356,7 @@ void render(void)
           y2,
           u2,
           v2,
-          0xFF000000);
+          mesh_texture);
       break;
     case RENDER_TEXTURED_WIREFRAME_TRIANGLE:
       draw_textured_triangle(
@@ -372,7 +372,7 @@ void render(void)
           y2,
           u2,
           v2,
-          0xFF000000);
+          mesh_texture);
       draw_triangle(
           x0,
           y0,

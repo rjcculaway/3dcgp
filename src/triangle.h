@@ -30,10 +30,14 @@ void sort_three_vertices_by_y(int vertices[3][2]);
 void fill_flat_bottom_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color);
 void fill_flat_top_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color);
 void draw_filled_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color);
+
+void sort_three_vertices_uv_by_y(int vertices[3][2], float uv[3][2]);
+void fill_textured_flat_top_triangle(int x0, int y0, int u0, int v0, int x1, int y1, int u1, int v1, int x2, int y2, int u2, int v2, color_t *texture);
+void fill_textured_flat_bottom_triangle(int x0, int y0, int u0, int v0, int x1, int y1, int u1, int v1, int x2, int y2, int u2, int v2, color_t *texture);
 void draw_textured_triangle(
     int x0, int y0, float u0, float v0,
     int x1, int y1, float u1, float v1,
     int x2, int y2, float u2, float v2,
-    color_t color);
+    color_t *texture);
 
 #endif
