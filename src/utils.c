@@ -7,7 +7,7 @@ void mergesort_triangle_merge(triangle_t *a, triangle_t *b, size_t n, size_t sta
 
   for (size_t k = start; k < end; k++)
   {
-    if (i < mid && (j >= end || a[i].depth < b[j].depth))
+    if (i < mid && (j >= end || a[i].depth <= b[j].depth))
     {
       b[k] = a[i];
       i++;
@@ -22,7 +22,7 @@ void mergesort_triangle_merge(triangle_t *a, triangle_t *b, size_t n, size_t sta
 
 void mergesort_triangle_partition(triangle_t *a, triangle_t *b, size_t n, size_t start, size_t end)
 {
-  if (end <= 1 + start) // end - start <= 1, meaning that the partition size is 1
+  if (end - start <= 1) // end - start <= 1, meaning that the partition size is 1
   {
     return;
   }
@@ -46,6 +46,22 @@ void mergesort_triangle_by_depth(triangle_t *triangles)
   free(b);
 
   assert(n == array_length(triangles));
+}
+
+void insertion_sort_triangle_by_depth(triangle_t *triangles)
+{
+  size_t n = array_length(triangles);
+  for (int slot = 1; slot < n; slot++)
+  {
+    int i = slot - 1;
+    triangle_t x = triangles[i + 1];
+    while (i > 0 && x.depth < triangles[i].depth)
+    {
+      triangles[i + 1] = triangles[i];
+      i--;
+    }
+    triangles[i + 1] = x;
+  }
 }
 
 float inline deg_to_rad(float deg)
