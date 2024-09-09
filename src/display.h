@@ -22,6 +22,8 @@ typedef enum render_method
   RENDER_WIREFRAME_DOT,
   RENDER_WIREFRAME_TRIANGLE,
   RENDER_TRIANGLE,
+  RENDER_TEXTURED_TRIANGLE,
+  RENDER_TEXTURED_WIREFRAME_TRIANGLE,
 } render_method;
 
 typedef enum culling_option

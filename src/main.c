@@ -43,9 +43,14 @@ bool setup(void)
       window_width,
       window_height);
 
+  // Load hardcoded texture data
+  mesh_texture = (uint32_t *)REDBRICK_TEXTURE;
+  texture_width = 64;
+  texture_height = 64;
+
   // Load mesh data from file
-  load_mesh_from_file("./assets/f22.obj");
-  // load_cube_mesh_data();
+  // load_mesh_from_file("./assets/f22.obj");
+  load_cube_mesh_data();
   printf("vertices: %d, faces: %d\n", array_length(mesh.vertices), array_length(mesh.faces));
 
   // Setup the projection matrix
@@ -98,6 +103,12 @@ void process_input(void)
       break;
     case SDLK_4:
       current_render_method = RENDER_WIREFRAME_TRIANGLE;
+      break;
+    case SDLK_5:
+      current_render_method = RENDER_TEXTURED_TRIANGLE;
+      break;
+    case SDLK_6:
+      current_render_method = RENDER_TEXTURED_WIREFRAME_TRIANGLE;
       break;
     case SDLK_c:
       current_culling_option = CULLING_BACKFACE;
@@ -219,9 +230,14 @@ void update(void)
       // Project
       projected_points[j] = mat4_matmul_vec_project(projection_matrix, transformed_vertices[j]);
 
+      // Move to screen space
       // Scale into the view
       projected_points[j].x *= (window_width / 2.0);
       projected_points[j].y *= (window_height / 2.0);
+
+      // Invert the y values since the y value in screen space grows downward from the top
+      projected_points[j].y *= -1;
+
       // Translate projected points to the middle of the screen
       projected_points[j].x += (window_width / 2.0);
       projected_points[j].y += (window_height / 2.0);
@@ -237,13 +253,14 @@ void update(void)
             {.x = projected_points[0].x, projected_points[0].y},
             {.x = projected_points[1].x, projected_points[1].y},
             {.x = projected_points[2].x, projected_points[2].y}},
+        .texcoords = {{face.a_uv.u, face.a_uv.v}, {face.b_uv.u, face.b_uv.v}, {face.c_uv.u, face.c_uv.v}},
         .color = final_color,
         .depth = avg_depth};
     array_push(triangles_to_render, projected_triangle);
   }
 
   // Sort the triangles by depth in ascending order
-  mergesort_triangle_by_depth(triangles_to_render);
+  insertion_sort_triangle_by_depth(triangles_to_render);
 }
 
 void render(void)
@@ -259,11 +276,17 @@ void render(void)
   {
     triangle_t triangle = triangles_to_render[i];
     int x0 = triangle.points[0].x;
+    float u0 = triangle.texcoords[0].u;
     int x1 = triangle.points[1].x;
+    float u1 = triangle.texcoords[1].u;
     int x2 = triangle.points[2].x;
+    float u2 = triangle.texcoords[2].u;
     int y0 = triangle.points[0].y;
+    float v0 = triangle.texcoords[0].v;
     int y1 = triangle.points[1].y;
+    float v1 = triangle.texcoords[1].v;
     int y2 = triangle.points[2].y;
+    float v2 = triangle.texcoords[2].v;
 
     switch (current_render_method)
     {
@@ -318,6 +341,46 @@ void render(void)
           x2,
           y2,
           triangle.color);
+      break;
+    case RENDER_TEXTURED_TRIANGLE:
+      draw_textured_triangle(
+          x0,
+          y0,
+          u0,
+          v0,
+          x1,
+          y1,
+          u1,
+          v1,
+          x2,
+          y2,
+          u2,
+          v2,
+          0xFF000000);
+      break;
+    case RENDER_TEXTURED_WIREFRAME_TRIANGLE:
+      draw_textured_triangle(
+          x0,
+          y0,
+          u0,
+          v0,
+          x1,
+          y1,
+          u1,
+          v1,
+          x2,
+          y2,
+          u2,
+          v2,
+          0xFF000000);
+      draw_triangle(
+          x0,
+          y0,
+          x1,
+          y1,
+          x2,
+          y2,
+          0xFF000000);
       break;
     default:
       fprintf(stderr, "WARNING: Invalid culling option selected!");
