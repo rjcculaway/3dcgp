@@ -194,6 +194,12 @@ vec3_t vec3_from_vec4(vec4_t v)
   return u;
 }
 
+vec2_t vec4_xy(vec4_t v)
+{
+  vec2_t result = {.x = v.x, .y = v.y};
+  return result;
+}
+
 float vec4_length_sq(vec4_t v)
 {
   return v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;

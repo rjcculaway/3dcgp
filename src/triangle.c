@@ -100,18 +100,31 @@ void draw_filled_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_
 }
 
 void draw_texel(int xi, int yi,
-                vec2_t point_a, vec2_t point_b, vec2_t point_c,
-                float u0, float v0, float u1, float v1, float u2, float v2, color_t *texture)
+                vec4_t point_a, vec4_t point_b, vec4_t point_c,
+                tex2_t uv_a, tex2_t uv_b, tex2_t uv_c, color_t *texture)
 {
   vec2_t p = {.x = xi, .y = yi};
-  vec3_t weights = barycentric_weights(point_a, point_b, point_c, p);
+  vec3_t weights = barycentric_weights(vec4_xy(point_a), vec4_xy(point_b), vec4_xy(point_c), p);
 
   float alpha = weights.x;
   float beta = weights.y;
   float gamma = weights.z;
 
-  float u = u0 * alpha + u1 * beta + u2 * gamma;
-  float v = v0 * alpha + v1 * beta + v2 * gamma;
+  // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
+  // Get the reciprocal all of the ws of the points
+  // w is initially the z component
+  float inv_w_a = 1 / point_a.w;
+  float inv_w_b = 1 / point_b.w;
+  float inv_w_c = 1 / point_c.w;
+
+  // Interpolate using barycentric coordinates, multiplying by 1 / w of the point for correct perspective texture mapping (instead of affine texture mapping)
+  float u = uv_a.u * inv_w_a * alpha + uv_b.u * inv_w_b * beta + uv_c.u * inv_w_c * gamma;
+  float v = uv_a.v * inv_w_a * alpha + uv_b.v * inv_w_b * beta + uv_c.v * inv_w_c * gamma;
+  float inverse_w = inv_w_a * alpha + inv_w_b * beta + inv_w_c * gamma;
+
+  // Divide by the interpolated inverse of w to remove the initial division by w.
+  u /= inverse_w;
+  v /= inverse_w;
 
   // Map the UV coordinate to actual texture dimensions
   int texture_x = clamp(0, texture_width, abs((int)(texture_width * u)));
@@ -120,34 +133,40 @@ void draw_texel(int xi, int yi,
   draw_pixel(xi, yi, texture[texture_width * texture_y + texture_x]);
 }
 
-void sort_three_vertices_uv_by_y(int vertices[3][2], float uv[3][2]) // Insertion Sort
+void sort_three_vertices_uv_by_y(int vertices[3][2], float uv[3][2], float zw[3][2]) // Insertion Sort
 {
   for (int slot = 1; slot < 3; slot++)
   {
     int i = slot - 1;
     int x = vertices[i + 1][0];
     int y = vertices[i + 1][1];
+    float z = zw[i + 1][0];
+    float w = zw[i + 1][1];
     float u = uv[i + 1][0];
     float v = uv[i + 1][1];
     while (i >= 0 && vertices[i][1] > y) // Sort by y-value
     {
       vertices[i + 1][0] = vertices[i][0];
       vertices[i + 1][1] = vertices[i][1];
+      zw[i + 1][0] = zw[i][0];
+      zw[i + 1][1] = zw[i][1];
       uv[i + 1][0] = uv[i][0];
       uv[i + 1][1] = uv[i][1];
       i--;
     }
     vertices[i + 1][0] = x;
     vertices[i + 1][1] = y;
+    zw[i + 1][0] = z;
+    zw[i + 1][1] = w;
     uv[i + 1][0] = u;
     uv[i + 1][1] = v;
   }
 }
 
 void draw_textured_triangle(
-    int x0, int y0, float u0, float v0,
-    int x1, int y1, float u1, float v1,
-    int x2, int y2, float u2, float v2,
+    int x0, int y0, float z0, float w0, float u0, float v0,
+    int x1, int y1, float z1, float w1, float u1, float v1,
+    int x2, int y2, float z2, float w2, float u2, float v2,
     color_t *texture)
 {
   int vertices[3][2] = {
@@ -159,27 +178,43 @@ void draw_textured_triangle(
       {u1, v1},
       {u2, v2},
   };
+  float zw[3][2] = {
+      {z0, w0},
+      {z1, w1},
+      {z2, w2}};
   // Sort the vertices
-  sort_three_vertices_uv_by_y(vertices, uvs);
+  sort_three_vertices_uv_by_y(vertices, uvs, zw);
   x0 = vertices[0][0];
   y0 = vertices[0][1];
+  z0 = zw[0][0];
+  w0 = zw[0][1];
   u0 = uvs[0][0];
   v0 = uvs[0][1];
   x1 = vertices[1][0];
   y1 = vertices[1][1];
+  z1 = zw[1][0];
+  w1 = zw[1][1];
   u1 = uvs[1][0];
   v1 = uvs[1][1];
   x2 = vertices[2][0];
   y2 = vertices[2][1];
+  z2 = zw[2][0];
+  w2 = zw[2][1];
   u2 = uvs[2][0];
   v2 = uvs[2][1];
 
-  vec2_t point_a = {
-      x0, y0};
-  vec2_t point_b = {
-      x1, y1};
-  vec2_t point_c = {
-      x2, y2};
+  vec4_t point_a = {
+      x0, y0, z0, w0};
+  tex2_t uv_a = {
+      u0, v0};
+  vec4_t point_b = {
+      x1, y1, z1, w1};
+  tex2_t uv_b = {
+      u1, v1};
+  vec4_t point_c = {
+      x2, y2, z2, w2};
+  tex2_t uv_c = {
+      u2, v2};
 
   // Draw flat top
   float inv_slope1 = y2 != y1 ? ((float)(x2 - x1)) / abs(y2 - y1) : 0; // Inverse slope (run over rise), because in this case y is the independent value
@@ -200,7 +235,7 @@ void draw_textured_triangle(
       for (int xi = x_start; xi < x_end; xi++)
       {
         // We cannot use draw_line here as we need to sample the color of the texture
-        draw_texel(xi, yi, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2, texture);
+        draw_texel(xi, yi, point_a, point_b, point_c, uv_a, uv_b, uv_c, texture);
       }
       x_start -= inv_slope1;
       x_end -= inv_slope2;
@@ -226,7 +261,7 @@ void draw_textured_triangle(
       for (int xi = x_start; xi < x_end; xi++)
       {
         // We cannot use draw_line here as we need to sample the color of the texture
-        draw_texel(xi, yi, point_a, point_b, point_c, u0, v0, u1, v1, u2, v2, texture);
+        draw_texel(xi, yi, point_a, point_b, point_c, uv_a, uv_b, uv_c, texture);
       }
     }
   }

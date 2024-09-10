@@ -136,9 +136,9 @@ void update(void)
 
   previous_frame_time = SDL_GetTicks64();
 
-  mesh.rotation.x += 0.01;
-  // mesh.rotation.y += 0.01;
-  // mesh.rotation.z += 0.005;
+  // mesh.rotation.x += 0.01;
+  mesh.rotation.y += 0.01;
+  // mesh.rotation.z += 0.01;
 
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
@@ -250,9 +250,9 @@ void update(void)
     float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0;
     triangle_t projected_triangle = {
         .points = {
-            {.x = projected_points[0].x, projected_points[0].y},
-            {.x = projected_points[1].x, projected_points[1].y},
-            {.x = projected_points[2].x, projected_points[2].y}},
+            {.x = projected_points[0].x, .y = projected_points[0].y, .z = projected_points[0].z, .w = projected_points[0].w},
+            {.x = projected_points[1].x, .y = projected_points[1].y, .z = projected_points[1].z, .w = projected_points[1].w},
+            {.x = projected_points[2].x, .y = projected_points[2].y, .z = projected_points[2].z, .w = projected_points[2].w}},
         .texcoords = {{face.a_uv.u, face.a_uv.v}, {face.b_uv.u, face.b_uv.v}, {face.c_uv.u, face.c_uv.v}},
         .color = final_color,
         .depth = avg_depth};
@@ -276,38 +276,40 @@ void render(void)
   {
     triangle_t triangle = triangles_to_render[i];
     int x0 = triangle.points[0].x;
-    float u0 = triangle.texcoords[0].u;
-    int x1 = triangle.points[1].x;
-    float u1 = triangle.texcoords[1].u;
-    int x2 = triangle.points[2].x;
-    float u2 = triangle.texcoords[2].u;
     int y0 = triangle.points[0].y;
+    float z0 = triangle.points[0].z;
+    float w0 = triangle.points[0].w;
+    float u0 = triangle.texcoords[0].u;
     float v0 = triangle.texcoords[0].v;
+
+    int x1 = triangle.points[1].x;
     int y1 = triangle.points[1].y;
+    float z1 = triangle.points[1].z;
+    float w1 = triangle.points[1].w;
+    float u1 = triangle.texcoords[1].u;
     float v1 = triangle.texcoords[1].v;
+
+    int x2 = triangle.points[2].x;
     int y2 = triangle.points[2].y;
+    float z2 = triangle.points[2].z;
+    float w2 = triangle.points[2].w;
+    float u2 = triangle.texcoords[2].u;
     float v2 = triangle.texcoords[2].v;
 
     switch (current_render_method)
     {
     case RENDER_WIREFRAME:
       draw_triangle(
-          x0,
-          y0,
-          x1,
-          y1,
-          x2,
-          y2,
+          x0, y0,
+          x1, y1,
+          x2, y2,
           triangle.color);
       break;
     case RENDER_WIREFRAME_DOT:
       draw_triangle(
-          x0,
-          y0,
-          x1,
-          y1,
-          x2,
-          y2,
+          x0, y0,
+          x1, y1,
+          x2, y2,
           triangle.color);
       const int point_size = 4;
       draw_rect(x0 - point_size / 2, y0 - point_size / 2, point_size, point_size, 0xFFFF0000);
@@ -316,70 +318,40 @@ void render(void)
       break;
     case RENDER_WIREFRAME_TRIANGLE:
       draw_filled_triangle(
-          x0,
-          y0,
-          x1,
-          y1,
-          x2,
-          y2,
+          x0, y0,
+          x1, y1,
+          x2, y2,
           triangle.color);
       draw_triangle(
-          x0,
-          y0,
-          x1,
-          y1,
-          x2,
-          y2,
+          x0, y0,
+          x1, y1,
+          x2, y2,
           0xFF000000);
       break;
     case RENDER_TRIANGLE:
       draw_filled_triangle(
-          x0,
-          y0,
-          x1,
-          y1,
-          x2,
-          y2,
+          x0, y0,
+          x1, y1,
+          x2, y2,
           triangle.color);
       break;
     case RENDER_TEXTURED_TRIANGLE:
       draw_textured_triangle(
-          x0,
-          y0,
-          u0,
-          v0,
-          x1,
-          y1,
-          u1,
-          v1,
-          x2,
-          y2,
-          u2,
-          v2,
+          x0, y0, z0, w0, u0, v0,
+          x1, y1, z1, w1, u1, v1,
+          x2, y2, z2, w2, u2, v2,
           mesh_texture);
       break;
     case RENDER_TEXTURED_WIREFRAME_TRIANGLE:
       draw_textured_triangle(
-          x0,
-          y0,
-          u0,
-          v0,
-          x1,
-          y1,
-          u1,
-          v1,
-          x2,
-          y2,
-          u2,
-          v2,
+          x0, y0, z0, w0, u0, v0,
+          x1, y1, z1, w1, u1, v1,
+          x2, y2, z2, w2, u2, v2,
           mesh_texture);
       draw_triangle(
-          x0,
-          y0,
-          x1,
-          y1,
-          x2,
-          y2,
+          x0, y0,
+          x1, y1,
+          x2, y2,
           0xFF000000);
       break;
     default:
