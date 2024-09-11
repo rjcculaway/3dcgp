@@ -131,7 +131,16 @@ void draw_texel(int xi, int yi,
   int texture_x = clamp(0, texture_width, abs((int)(texture_width * u)) % texture_width);
   int texture_y = clamp(0, texture_height, abs((int)(texture_height * v)) % texture_height);
 
-  draw_pixel(xi, yi, texture[texture_width * texture_y + texture_x]);
+  // Using the inverse w as is is incorrect, as nearer objects get lesser inverse w values than farther ones.
+  // As such, we need to subtract the inverse w from 1.0.
+  float transformed_inverse_w = 1.0 - inverse_w;
+  if (transformed_inverse_w < z_buffer[(window_width * yi) + xi]) // Draw only if the current depth is less than what is in the z-buffer
+  {
+    // printf("before: %f\t", z_buffer[get_pixel(xi, yi)]);
+    draw_pixel(xi, yi, texture[texture_width * texture_y + texture_x]);
+    z_buffer[(window_width * yi) + xi] = transformed_inverse_w;
+    // printf("after: %f\n", z_buffer[get_pixel(xi, yi)]);
+  }
 }
 
 void sort_three_vertices_uv_by_y(triangle_t *triangle) // Insertion Sort, sorts in place

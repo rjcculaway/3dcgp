@@ -35,6 +35,16 @@ bool setup(void)
     return false;
   }
 
+  // Allocate memory for the z-buffer
+  // Also a contiguous block of memory interpreted as a 2D array
+  z_buffer = (float *)malloc(sizeof(float) * window_width * window_height);
+
+  if (z_buffer == NULL)
+  {
+    fprintf(stderr, "ERROR: Failed to allocate memory for the z-buffer.");
+    return false;
+  }
+
   // Create the SDL Texture to display the color buffer
   color_buffer_texture = SDL_CreateTexture(
       renderer,
@@ -44,11 +54,11 @@ bool setup(void)
       window_height);
 
   // Load texture data from .png file
-  load_png_texture_data("./assets/crab.png");
+  load_png_texture_data("./assets/drone.png");
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/crab.obj");
-  // load_cube_mesh_data();
+  load_mesh_from_file("./assets/drone.obj");
+
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
   // Setup the projection matrix
@@ -141,7 +151,7 @@ void update(void)
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
   // mesh.translation.x += 0.01;
-  mesh.translation.z = 5.0;
+  mesh.translation.z = 2.0;
 
   // Create a scale, rotation, translation matrix
   mat4_t scale_mat = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.y);
@@ -258,7 +268,7 @@ void update(void)
   }
 
   // Sort the triangles by depth in descending order (farthest triangles first)
-  insertion_sort_triangle_by_depth(triangles_to_render);
+  // insertion_sort_triangle_by_depth(triangles_to_render);
   // mergesort_triangle_by_depth(triangles_to_render);  // Fast but very unreliable
   // bubble_sort_triangle_by_depth(triangles_to_render);
 }
@@ -349,6 +359,7 @@ void render(void)
 
   render_color_buffer();
   clear_color_buffer(0xFF000000);
+  clear_z_buffer();
 
   SDL_RenderPresent(renderer);
 }
@@ -356,6 +367,8 @@ void render(void)
 void free_resources(void)
 {
   upng_free(png_texture);
+  free(z_buffer);
+  z_buffer = NULL;
   free(color_buffer);
   color_buffer = NULL;
   array_free(mesh.faces);

@@ -40,6 +40,7 @@ extern int window_height;
 extern SDL_Window *window;
 extern SDL_Renderer *renderer;
 extern color_t *color_buffer;             // Raw pixel data
+extern float *z_buffer;                   // Z-buffer, actually the "1/w" buffer as the z cannot be linearly interpolated. The larger the z, the farther, so this should start with 1.0 in all values.
 extern SDL_Texture *color_buffer_texture; // Texture to be displayed to the render target
 
 size_t get_pixel(const size_t i, const size_t j);
@@ -47,6 +48,7 @@ bool initialize_window(void);
 void destroy_window(void);
 void render_color_buffer(void);
 void clear_color_buffer(color_t color);
+void clear_z_buffer(void);
 
 // Drawing Functions
 bool is_valid_pixel(int x, int y);

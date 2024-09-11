@@ -5,12 +5,13 @@ int window_height = 900;
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
-color_t *color_buffer = NULL;             // Raw pixel data
+color_t *color_buffer = NULL; // Raw pixel data
+float *z_buffer = NULL;
 SDL_Texture *color_buffer_texture = NULL; // Texture to be displayed to the render target
 
-size_t inline get_pixel(const size_t x, const size_t y)
+size_t inline get_pixel(const size_t i, const size_t j)
 {
-  return (window_width * y) + x;
+  return (window_width * j) + i;
 }
 
 bool initialize_window(void)
@@ -85,13 +86,19 @@ void render_color_buffer(void)
  */
 void clear_color_buffer(color_t color)
 {
-  for (int y = 0; y < window_height; y++)
+  memset(color_buffer, color, sizeof(color_t) * window_width * window_height);
+}
+
+void clear_z_buffer(void)
+{
+  for (int j = 0; j < window_height; j++)
   {
-    for (int x = 0; x < window_width; x++)
+    for (int i = 0; i < window_width; i++)
     {
-      color_buffer[get_pixel(x, y)] = color;
+      z_buffer[get_pixel(i, j)] = 1.0;
     }
   }
+  // memset() isn't possible here since floats are multibyte types.
 }
 
 bool inline is_valid_pixel(int x, int y)
