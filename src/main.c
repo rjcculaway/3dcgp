@@ -38,15 +38,18 @@ bool setup(void)
   // Create the SDL Texture to display the color buffer
   color_buffer_texture = SDL_CreateTexture(
       renderer,
-      SDL_PIXELFORMAT_ARGB8888,    // Pixel Format
+      SDL_PIXELFORMAT_RGBA32,      // Pixel Format
       SDL_TEXTUREACCESS_STREAMING, // Changes will automatically update the texture
       window_width,
       window_height);
 
   // Load hardcoded texture data
-  mesh_texture = (uint32_t *)REDBRICK_TEXTURE;
-  texture_width = 64;
-  texture_height = 64;
+  // mesh_texture = (uint32_t *)REDBRICK_TEXTURE;
+  // texture_width = 64;
+  // texture_height = 64;
+
+  // Load texture data from .png file
+  load_png_texture_data("./assets/cube.png");
 
   // Load mesh data from file
   // load_mesh_from_file("./assets/f22.obj");

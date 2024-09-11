@@ -81,7 +81,7 @@ void render_color_buffer(void)
 }
 /**
  * Fills the buffer with a color.
- * @param color The color (in ARGB8888 format) to fill the color buffer with.
+ * @param color The color (in RGBA8888 format) to fill the color buffer with.
  */
 void clear_color_buffer(color_t color)
 {

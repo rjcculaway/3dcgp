@@ -6,10 +6,10 @@
 #include "math.h"
 #include "utils.h"
 
-extern const color_t ARGB8888_A_BITMASK;
-extern const color_t ARGB8888_R_BITMASK;
-extern const color_t ARGB8888_G_BITMASK;
-extern const color_t ARGB8888_B_BITMASK;
+extern const color_t RGBA8888_A_BITMASK;
+extern const color_t RGBA8888_R_BITMASK;
+extern const color_t RGBA8888_G_BITMASK;
+extern const color_t RGBA8888_B_BITMASK;
 
 typedef struct sun_light
 {
