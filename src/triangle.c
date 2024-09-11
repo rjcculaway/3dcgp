@@ -113,6 +113,7 @@ void draw_texel(int xi, int yi,
   // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
   // Get the reciprocal all of the ws of the points
   // w is initially the z component
+  // We can extract this part outside of this function to reduce the amount of divisions performed
   float inv_w_a = 1 / point_a.w;
   float inv_w_b = 1 / point_b.w;
   float inv_w_c = 1 / point_c.w;
@@ -133,88 +134,48 @@ void draw_texel(int xi, int yi,
   draw_pixel(xi, yi, texture[texture_width * texture_y + texture_x]);
 }
 
-void sort_three_vertices_uv_by_y(int vertices[3][2], float uv[3][2], float zw[3][2]) // Insertion Sort
+void sort_three_vertices_uv_by_y(triangle_t *triangle) // Insertion Sort, sorts in place
 {
   for (int slot = 1; slot < 3; slot++)
   {
     int i = slot - 1;
-    int x = vertices[i + 1][0];
-    int y = vertices[i + 1][1];
-    float z = zw[i + 1][0];
-    float w = zw[i + 1][1];
-    float u = uv[i + 1][0];
-    float v = uv[i + 1][1];
-    while (i >= 0 && vertices[i][1] > y) // Sort by y-value
+    vec4_t vertex = triangle->points[i + 1];
+    tex2_t uv = triangle->texcoords[i + 1];
+
+    while (i >= 0 && triangle->points[i].y > vertex.y) // Sort by y-value
     {
-      vertices[i + 1][0] = vertices[i][0];
-      vertices[i + 1][1] = vertices[i][1];
-      zw[i + 1][0] = zw[i][0];
-      zw[i + 1][1] = zw[i][1];
-      uv[i + 1][0] = uv[i][0];
-      uv[i + 1][1] = uv[i][1];
+      triangle->points[i + 1] = triangle->points[i];
+      triangle->texcoords[i + 1] = triangle->texcoords[i];
       i--;
     }
-    vertices[i + 1][0] = x;
-    vertices[i + 1][1] = y;
-    zw[i + 1][0] = z;
-    zw[i + 1][1] = w;
-    uv[i + 1][0] = u;
-    uv[i + 1][1] = v;
+    triangle->points[i + 1] = vertex;
+    triangle->texcoords[i + 1] = uv;
   }
 }
 
 void draw_textured_triangle(
-    int x0, int y0, float z0, float w0, float u0, float v0,
-    int x1, int y1, float z1, float w1, float u1, float v1,
-    int x2, int y2, float z2, float w2, float u2, float v2,
+    triangle_t triangle,
     color_t *texture)
 {
-  int vertices[3][2] = {
-      {x0, y0},
-      {x1, y1},
-      {x2, y2}};
-  float uvs[3][2] = {
-      {u0, v0},
-      {u1, v1},
-      {u2, v2},
-  };
-  float zw[3][2] = {
-      {z0, w0},
-      {z1, w1},
-      {z2, w2}};
   // Sort the vertices
-  sort_three_vertices_uv_by_y(vertices, uvs, zw);
-  x0 = vertices[0][0];
-  y0 = vertices[0][1];
-  z0 = zw[0][0];
-  w0 = zw[0][1];
-  u0 = uvs[0][0];
-  v0 = uvs[0][1];
-  x1 = vertices[1][0];
-  y1 = vertices[1][1];
-  z1 = zw[1][0];
-  w1 = zw[1][1];
-  u1 = uvs[1][0];
-  v1 = uvs[1][1];
-  x2 = vertices[2][0];
-  y2 = vertices[2][1];
-  z2 = zw[2][0];
-  w2 = zw[2][1];
-  u2 = uvs[2][0];
-  v2 = uvs[2][1];
+  sort_three_vertices_uv_by_y(&triangle);
 
-  vec4_t point_a = {
-      x0, y0, z0, w0};
-  tex2_t uv_a = {
-      u0, v0};
-  vec4_t point_b = {
-      x1, y1, z1, w1};
-  tex2_t uv_b = {
-      u1, v1};
-  vec4_t point_c = {
-      x2, y2, z2, w2};
-  tex2_t uv_c = {
-      u2, v2};
+  // Unpack values
+  vec4_t point_a = triangle.points[0];
+  tex2_t uv_a = triangle.texcoords[0];
+  vec4_t point_b = triangle.points[1];
+  tex2_t uv_b = triangle.texcoords[1];
+  vec4_t point_c = triangle.points[2];
+  tex2_t uv_c = triangle.texcoords[2];
+
+  int x0 = point_a.x;
+  int y0 = point_a.y;
+
+  int x1 = point_b.x;
+  int y1 = point_b.y;
+
+  int x2 = point_c.x;
+  int y2 = point_c.y;
 
   // Draw flat top
   float inv_slope1 = y2 != y1 ? ((float)(x2 - x1)) / abs(y2 - y1) : 0; // Inverse slope (run over rise), because in this case y is the independent value
@@ -243,8 +204,8 @@ void draw_textured_triangle(
   }
 
   // Draw flat bottom
-  inv_slope1 = y1 != y0 ? ((float)(x1 - x0)) / abs(y1 - y0) : 0; // Inverse slope (run over rise), because in this case y is the independent value
-  inv_slope2 = y2 != y0 ? ((float)(x2 - x0)) / abs(y2 - y0) : 0;
+  inv_slope1 = y1 != y0 ? ((float)(x1 - x0)) / abs((int)y1 - (int)y0) : 0; // Inverse slope (run over rise), because in this case y is the independent value
+  inv_slope2 = y2 != y0 ? ((float)(x2 - x0)) / abs((int)y2 - (int)y0) : 0;
 
   if (y0 != y1)
   {
