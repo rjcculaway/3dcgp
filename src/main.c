@@ -15,7 +15,9 @@
 render_method current_render_method = RENDER_TEXTURED_TRIANGLE;
 culling_option current_culling_option = CULLING_BACKFACE;
 
-triangle_t *triangles_to_render = NULL;
+#define MAX_TRIANGLES_PER_MESH 10000
+triangle_t triangles_to_render[MAX_TRIANGLES_PER_MESH];
+int num_triangles_to_render = 0;
 
 vec3_t camera_position = {.x = 0, .y = 0, .z = 0};
 mat4_t projection_matrix;
@@ -140,7 +142,7 @@ void update(void)
     SDL_Delay(time_to_wait); // Delay update until enough time has passed.
   }
 
-  triangles_to_render = NULL;
+  num_triangles_to_render = 0;
 
   previous_frame_time = SDL_GetTicks64();
 
@@ -151,7 +153,7 @@ void update(void)
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
   // mesh.translation.x += 0.01;
-  mesh.translation.z = 2.0;
+  mesh.translation.z = 5.0;
 
   // Create a scale, rotation, translation matrix
   mat4_t scale_mat = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.y);
@@ -262,7 +264,11 @@ void update(void)
         .texcoords = {mesh.texcoords[face.a_uv], mesh.texcoords[face.b_uv], mesh.texcoords[face.c_uv]},
         .color = final_color,
     };
-    array_push(triangles_to_render, projected_triangle);
+    if (num_triangles_to_render < MAX_TRIANGLES_PER_MESH)
+    {
+      triangles_to_render[num_triangles_to_render] = projected_triangle;
+      num_triangles_to_render++;
+    }
   }
 
   // Without the z-buffer, we would need to sort the triangles by z here (Painter's algorithm).
@@ -275,9 +281,8 @@ void render(void)
 
   draw_grid();
   // draw_rect(0, 0, 200, 200, 0xFF00FF00);
-  int n_triangles = array_length(triangles_to_render);
   // Draw all projected points from the cube
-  for (int i = 0; i < n_triangles; i++)
+  for (int i = 0; i < num_triangles_to_render; i++)
   {
     triangle_t triangle = triangles_to_render[i];
     int x0 = triangle.points[0].x;
@@ -344,9 +349,6 @@ void render(void)
       break;
     }
   }
-
-  // Clear the triangle dynamic array
-  array_free(triangles_to_render);
 
   render_color_buffer();
   clear_color_buffer(0xFF000000);
