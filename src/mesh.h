@@ -7,13 +7,14 @@
 #define N_CUBE_VERTICES 8
 #define N_CUBE_FACES (6 * 2) // 6 faces, 2 triangles per face
 
-extern vec3_t cube_vertices[N_CUBE_VERTICES];
-extern face_t cube_faces[N_CUBE_FACES];
+// extern vec3_t cube_vertices[N_CUBE_VERTICES];
+// extern face_t cube_faces[N_CUBE_FACES];
 
 typedef struct mesh
 {
   vec3_t *vertices; // Dynamic
   face_t *faces;    // Dynamic
+  tex2_t *texcoords;
   vec3_t rotation;
   vec3_t scale;
   vec3_t translation;

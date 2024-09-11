@@ -160,6 +160,13 @@ void draw_textured_triangle(
   // Sort the vertices
   sort_three_vertices_uv_by_y(&triangle);
 
+  // OBJ file UV coordinates start from the top left and v grows downwards,
+  // so we need to change the v component to be make it start from the bottom left instead.
+  for (int i = 0; i < 3; i++)
+  {
+    triangle.texcoords[i].v = 1.0 - triangle.texcoords[i].v;
+  }
+
   // Unpack values
   vec4_t point_a = triangle.points[0];
   tex2_t uv_a = triangle.texcoords[0];

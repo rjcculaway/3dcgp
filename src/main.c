@@ -43,18 +43,13 @@ bool setup(void)
       window_width,
       window_height);
 
-  // Load hardcoded texture data
-  // mesh_texture = (uint32_t *)REDBRICK_TEXTURE;
-  // texture_width = 64;
-  // texture_height = 64;
-
   // Load texture data from .png file
   load_png_texture_data("./assets/cube.png");
 
   // Load mesh data from file
-  // load_mesh_from_file("./assets/f22.obj");
-  load_cube_mesh_data();
-  printf("vertices: %d, faces: %d\n", array_length(mesh.vertices), array_length(mesh.faces));
+  load_mesh_from_file("./assets/cube.obj");
+  // load_cube_mesh_data();
+  printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
   // Setup the projection matrix
   float fov = M_PI / 3;
@@ -170,9 +165,9 @@ void update(void)
     face_t face = mesh.faces[i];
 
     vec3_t face_vertices[3];
-    face_vertices[0] = mesh.vertices[face.a - 1];
-    face_vertices[1] = mesh.vertices[face.b - 1];
-    face_vertices[2] = mesh.vertices[face.c - 1];
+    face_vertices[0] = mesh.vertices[face.a];
+    face_vertices[1] = mesh.vertices[face.b];
+    face_vertices[2] = mesh.vertices[face.c];
 
     vec4_t transformed_vertices[3];
 
@@ -256,7 +251,7 @@ void update(void)
             {.x = projected_points[0].x, .y = projected_points[0].y, .z = projected_points[0].z, .w = projected_points[0].w},
             {.x = projected_points[1].x, .y = projected_points[1].y, .z = projected_points[1].z, .w = projected_points[1].w},
             {.x = projected_points[2].x, .y = projected_points[2].y, .z = projected_points[2].z, .w = projected_points[2].w}},
-        .texcoords = {{face.a_uv.u, face.a_uv.v}, {face.b_uv.u, face.b_uv.v}, {face.c_uv.u, face.c_uv.v}},
+        .texcoords = {mesh.texcoords[face.a_uv], mesh.texcoords[face.b_uv], mesh.texcoords[face.c_uv]},
         .color = final_color,
         .depth = avg_depth};
     array_push(triangles_to_render, projected_triangle);
@@ -363,6 +358,7 @@ void free_resources(void)
   color_buffer = NULL;
   array_free(mesh.faces);
   array_free(mesh.vertices);
+  array_free(mesh.texcoords);
 }
 
 int main(void)

@@ -13,9 +13,9 @@ typedef struct face
   int a;
   int b;
   int c;
-  tex2_t a_uv;
-  tex2_t b_uv;
-  tex2_t c_uv;
+  int a_uv;
+  int b_uv;
+  int c_uv;
   color_t color;
 } face_t;
 

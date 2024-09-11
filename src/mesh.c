@@ -4,6 +4,7 @@
 #include "mesh.h"
 #include "array.h"
 
+/*
 vec3_t cube_vertices[N_CUBE_VERTICES] = {
     {.x = -1, .y = -1, .z = -1}, // 1
     {.x = -1, .y = 1, .z = -1},  // 2
@@ -34,10 +35,12 @@ face_t cube_faces[N_CUBE_FACES] = {
     // Bottom
     {.a = 6, .b = 8, .c = 1, .a_uv = {0, 1}, .b_uv = {0, 0}, .c_uv = {1, 0}, .color = 0xFFFFFFFF},
     {.a = 6, .b = 1, .c = 4, .a_uv = {0, 1}, .b_uv = {1, 0}, .c_uv = {1, 1}, .color = 0xFFFFFFFF}};
+*/
 
 mesh_t mesh = {
     .vertices = NULL,
     .faces = NULL,
+    .texcoords = NULL,
     .rotation = {0, 0, 0},
     .scale = {1.0, 1.0, 1.0},
     .translation = {0.0, 0.0, 0.0},
@@ -61,10 +64,23 @@ void load_mesh_from_file(char *file_name)
       sscanf(line, "v %f %f %f", &(vertex.x), &(vertex.y), &(vertex.z));
       array_push(mesh.vertices, vertex);
     }
+    if (strncmp("vt ", line, 3) == 0) // texture coordinates
+    {
+      tex2_t texcoord;
+      sscanf(line, "vt %f %f", &(texcoord.u), &(texcoord.v));
+      array_push(mesh.texcoords, texcoord);
+    }
     if (strncmp("f ", line, 2) == 0) // faces, ignore other values (%*d) for now
     {
       face_t face;
-      sscanf(line, "f %d/%*d/%*d %d/%*d/%*d %d/%*d/%*d", &(face.a), &(face.b), &(face.c));
+      sscanf(line, "f %d/%d/%*d %d/%d/%*d %d/%d/%*d", &(face.a), &(face.a_uv), &(face.b), &(face.b_uv), &(face.c), &(face.c_uv));
+      // Indices start at 1 so we subtract 1 for zero-indexing.
+      face.a--;
+      face.a_uv--;
+      face.b--;
+      face.b_uv--;
+      face.c--;
+      face.c_uv--;
       face.color = 0xFFFFFFFF;
       array_push(mesh.faces, face);
     }
@@ -72,6 +88,7 @@ void load_mesh_from_file(char *file_name)
   fclose(file_handle);
 }
 
+/*
 void load_cube_mesh_data(void)
 {
   for (int i = 0; i < N_CUBE_VERTICES; i++)
@@ -85,5 +102,6 @@ void load_cube_mesh_data(void)
     array_push(mesh.faces, cube_face);
   }
 }
+*/
 
 // TODO: Functions for meshes
