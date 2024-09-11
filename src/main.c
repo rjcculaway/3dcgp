@@ -44,10 +44,10 @@ bool setup(void)
       window_height);
 
   // Load texture data from .png file
-  load_png_texture_data("./assets/cube.png");
+  load_png_texture_data("./assets/crab.png");
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/cube.obj");
+  load_mesh_from_file("./assets/crab.obj");
   // load_cube_mesh_data();
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
@@ -257,8 +257,10 @@ void update(void)
     array_push(triangles_to_render, projected_triangle);
   }
 
-  // Sort the triangles by depth in ascending order
+  // Sort the triangles by depth in descending order (farthest triangles first)
   insertion_sort_triangle_by_depth(triangles_to_render);
+  // mergesort_triangle_by_depth(triangles_to_render);  // Fast but very unreliable
+  // bubble_sort_triangle_by_depth(triangles_to_render);
 }
 
 void render(void)

@@ -127,9 +127,9 @@ void draw_texel(int xi, int yi,
   u /= inverse_w;
   v /= inverse_w;
 
-  // Map the UV coordinate to actual texture dimensions
-  int texture_x = clamp(0, texture_width, abs((int)(texture_width * u)));
-  int texture_y = clamp(0, texture_height, abs((int)(texture_height * v)));
+  // Map the UV coordinate to actual texture dimensions, wrapping and clamping to avoid overflow
+  int texture_x = clamp(0, texture_width, abs((int)(texture_width * u)) % texture_width);
+  int texture_y = clamp(0, texture_height, abs((int)(texture_height * v)) % texture_height);
 
   draw_pixel(xi, yi, texture[texture_width * texture_y + texture_x]);
 }
@@ -268,7 +268,7 @@ void mergesort_triangle_merge(triangle_t *a, triangle_t *b, size_t n, size_t sta
 
   for (size_t k = start; k < end; k++)
   {
-    if (i < mid && (j >= end || a[i].depth <= b[j].depth))
+    if (i < mid && (j >= end || a[i].depth >= b[j].depth))
     {
       b[k] = a[i];
       i++;
@@ -316,11 +316,28 @@ void insertion_sort_triangle_by_depth(triangle_t *triangles)
   {
     int i = slot - 1;
     triangle_t x = triangles[i + 1];
-    while (i > 0 && x.depth < triangles[i].depth)
+    while (i > 0 && x.depth > triangles[i].depth)
     {
       triangles[i + 1] = triangles[i];
       i--;
     }
     triangles[i + 1] = x;
+  }
+}
+
+void bubble_sort_triangle_by_depth(triangle_t *triangles)
+{
+  size_t n = array_length(triangles);
+  for (int i = 0; i < n; i++)
+  {
+    for (int j = 1; j < n - i; j++)
+    {
+      if (triangles[j - 1].depth <= triangles[j].depth)
+      {
+        triangle_t temp = triangles[j - 1];
+        triangles[j - 1] = triangles[j];
+        triangles[j] = temp;
+      }
+    }
   }
 }

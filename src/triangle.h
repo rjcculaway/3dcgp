@@ -31,6 +31,7 @@ void mergesort_triangle_merge(triangle_t *a, triangle_t *b, size_t n, size_t sta
 void mergesort_triangle_partition(triangle_t *a, triangle_t *b, size_t n, size_t start, size_t end);
 void mergesort_triangle_by_depth(triangle_t *triangles);
 void insertion_sort_triangle_by_depth(triangle_t *triangles);
+void bubble_sort_triangle_by_depth(triangle_t *triangles);
 
 void sort_three_vertices_by_y(int vertices[3][2]);
 void fill_flat_bottom_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color);
