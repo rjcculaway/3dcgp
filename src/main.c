@@ -12,7 +12,7 @@
 #include "camera.h"
 #include "light.h"
 
-render_method current_render_method = RENDER_TRIANGLE;
+render_method current_render_method = RENDER_TEXTURED_TRIANGLE;
 culling_option current_culling_option = CULLING_BACKFACE;
 
 triangle_t *triangles_to_render = NULL;
@@ -254,8 +254,6 @@ void update(void)
     float light_intensity = light_lambertian(normal, sunlight.direction);
     color_t final_color = light_apply_intensity(face.color, light_intensity);
 
-    // For now, this is the average depth of the vertices. This is a naive approach.
-    float avg_depth = (transformed_vertices[0].z + transformed_vertices[1].z + transformed_vertices[2].z) / 3.0;
     triangle_t projected_triangle = {
         .points = {
             {.x = projected_points[0].x, .y = projected_points[0].y, .z = projected_points[0].z, .w = projected_points[0].w},
@@ -263,14 +261,11 @@ void update(void)
             {.x = projected_points[2].x, .y = projected_points[2].y, .z = projected_points[2].z, .w = projected_points[2].w}},
         .texcoords = {mesh.texcoords[face.a_uv], mesh.texcoords[face.b_uv], mesh.texcoords[face.c_uv]},
         .color = final_color,
-        .depth = avg_depth};
+    };
     array_push(triangles_to_render, projected_triangle);
   }
 
-  // Sort the triangles by depth in descending order (farthest triangles first)
-  // insertion_sort_triangle_by_depth(triangles_to_render);
-  // mergesort_triangle_by_depth(triangles_to_render);  // Fast but very unreliable
-  // bubble_sort_triangle_by_depth(triangles_to_render);
+  // Without the z-buffer, we would need to sort the triangles by z here (Painter's algorithm).
 }
 
 void render(void)
@@ -316,9 +311,7 @@ void render(void)
       break;
     case RENDER_WIREFRAME_TRIANGLE:
       draw_filled_triangle(
-          x0, y0,
-          x1, y1,
-          x2, y2,
+          triangle,
           triangle.color);
       draw_triangle(
           x0, y0,
@@ -328,9 +321,7 @@ void render(void)
       break;
     case RENDER_TRIANGLE:
       draw_filled_triangle(
-          x0, y0,
-          x1, y1,
-          x2, y2,
+          triangle,
           triangle.color);
       break;
     case RENDER_TEXTURED_TRIANGLE:

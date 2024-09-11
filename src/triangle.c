@@ -2,37 +2,37 @@
 #include "display.h"
 #include "texture.h"
 
-void sort_three_vertices_by_y(int vertices[3][2]) // Insertion Sort
-{
-  for (int slot = 1; slot < 3; slot++)
-  {
-    int i = slot - 1;
-    int x = vertices[i + 1][0];
-    int y = vertices[i + 1][1];
-    while (i >= 0 && vertices[i][1] > y) // Sort by y-value
-    {
-      vertices[i + 1][0] = vertices[i][0];
-      vertices[i + 1][1] = vertices[i][1];
-      i--;
-    }
-    vertices[i + 1][0] = x;
-    vertices[i + 1][1] = y;
-  }
-}
-
 // Draw a filled triangle with a flat bottom
-void fill_flat_bottom_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color)
+void fill_flat_bottom_triangle(triangle_t triangle, color_t color)
 {
-  float inv_slope1 = ((float)(x1 - x0)) / (y1 - y0); // Inverse slope (run over rise), because in this case y is the independent value
-  float inv_slope2 = ((float)(x2 - x0)) / (y2 - y0);
+  int x0 = triangle.points[0].x;
+  int y0 = triangle.points[0].y;
+  int x1 = triangle.points[1].x;
+  int y1 = triangle.points[1].y;
+  int x2 = triangle.points[2].x;
+  int y2 = triangle.points[2].y;
 
-  float x_start = x0;
-  float x_end = x0;
-  for (int yi = y0; yi <= y2; yi++)
+  float inv_slope1 = y1 != y0 ? ((float)(x1 - x0)) / abs((int)y1 - (int)y0) : 0; // Inverse slope (run over rise), because in this case y is the independent value
+  float inv_slope2 = y2 != y0 ? ((float)(x2 - x0)) / abs((int)y2 - (int)y0) : 0;
+
+  if (y0 != y1)
   {
-    draw_line(x_start, yi, x_end, yi, color);
-    x_start += inv_slope1;
-    x_end += inv_slope2;
+    for (int yi = y0; yi <= y1; yi++)
+    {
+      int x_start = x1 + (yi - y1) * inv_slope1;
+      int x_end = x0 + (yi - y0) * inv_slope2;
+      if (x_start > x_end)
+      {
+        float temp = x_start;
+        x_start = x_end;
+        x_end = temp;
+      }
+      for (int xi = x_start; xi < x_end; xi++)
+      {
+        // We cannot use draw_line here as we need to sample the color of the texture
+        draw_triangle_pixel(xi, yi, triangle.points[0], triangle.points[1], triangle.points[2], color);
+      }
+    }
   }
 }
 
@@ -49,54 +49,87 @@ void fill_flat_bottom_triangle(int x0, int y0, int x1, int y1, int x2, int y2, c
 //           \/                                         //
 //        (x2,y2)                                       //
 //------------------------------------------------------//
-void fill_flat_top_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color)
+void fill_flat_top_triangle(triangle_t triangle, color_t color)
 {
-  float inv_slope1 = ((float)(x2 - x0)) / (y2 - y0); // Inverse slope (run over rise), because in this case y is the independent value
-  float inv_slope2 = ((float)(x2 - x1)) / (y2 - y1);
+  int x0 = triangle.points[0].x;
+  int y0 = triangle.points[0].y;
+  int x1 = triangle.points[1].x;
+  int y1 = triangle.points[1].y;
+  int x2 = triangle.points[2].x;
+  int y2 = triangle.points[2].y;
 
-  float x_start = x2;
-  float x_end = x2;
-  for (int yi = y2; yi >= y0; yi--)
+  float inv_slope1 = y2 != y1 ? ((float)(x2 - x1)) / abs(y2 - y1) : 0; // Inverse slope (run over rise), because in this case y is the independent value
+  float inv_slope2 = y2 != y0 ? ((float)(x2 - x0)) / abs(y2 - y0) : 0;
+
+  for (int yi = y1; yi <= y2; yi++)
   {
-    draw_line(x_start, yi, x_end, yi, color);
+    int x_start = x1 + (yi - y1) * inv_slope1;
+    int x_end = x0 + (yi - y0) * inv_slope2;
+    if (x_start > x_end)
+    {
+      float temp = x_start;
+      x_start = x_end;
+      x_end = temp;
+    }
+    for (int xi = x_start; xi < x_end; xi++)
+    {
+      // We cannot use draw_line here as we need to sample the color of the texture
+      draw_triangle_pixel(xi, yi, triangle.points[0], triangle.points[1], triangle.points[2], color);
+    }
     x_start -= inv_slope1;
     x_end -= inv_slope2;
   }
 }
 
-void draw_filled_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color)
+void draw_filled_triangle(triangle_t triangle, color_t color)
 {
-  int vertices[3][2] = {
-      {x0, y0},
-      {x1, y1},
-      {x2, y2}};
-  // Sort the vertices
-  sort_three_vertices_by_y(vertices);
-  x0 = vertices[0][0];
-  y0 = vertices[0][1];
-  x1 = vertices[1][0];
-  y1 = vertices[1][1];
-  x2 = vertices[2][0];
-  y2 = vertices[2][1];
+  sort_three_vertices_uv_by_y(&triangle);
+  int y0 = triangle.points[0].y;
+  int y1 = triangle.points[1].y;
+  int y2 = triangle.points[2].y;
 
   // If one of the y values are equal, then that means that the triangle does not need to be divided into two!
-  if (y0 == y1)
+  if (y0 != y1)
   {
-    fill_flat_top_triangle(x0, y0, x1, y1, x2, y2, color);
+    fill_flat_bottom_triangle(triangle, color);
   }
-  else if (y1 == y2)
+  if (y1 != y2)
   {
-    fill_flat_bottom_triangle(x0, y0, x1, y1, x2, y2, color);
-  }
-  else
-  {
-    int mx = (((x2 - x0) * (y1 - y0)) / (y2 - y0)) + x0; // Calculate Mx by triangle similarity
-    int my = y1;
-
-    fill_flat_bottom_triangle(x0, y0, x1, y1, mx, my, color);
-    fill_flat_top_triangle(x1, y1, mx, my, x2, y2, color);
+    fill_flat_top_triangle(triangle, color);
   }
   return;
+}
+
+void draw_triangle_pixel(int xi, int yi,
+                         vec4_t point_a, vec4_t point_b, vec4_t point_c,
+                         color_t color)
+{
+  vec2_t p = {.x = xi, .y = yi};
+  vec3_t weights = barycentric_weights(vec4_xy(point_a), vec4_xy(point_b), vec4_xy(point_c), p);
+
+  float alpha = weights.x;
+  float beta = weights.y;
+  float gamma = weights.z;
+
+  // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
+  // Get the reciprocal all of the ws of the points
+  // w is initially the z component
+  // We can extract this part outside of this function to reduce the amount of divisions performed
+  float inv_w_a = 1 / point_a.w;
+  float inv_w_b = 1 / point_b.w;
+  float inv_w_c = 1 / point_c.w;
+
+  // Interpolate using barycentric coordinates, multiplying by 1 / w of the point for correct perspective texture mapping (instead of affine texture mapping)
+  float inverse_w = inv_w_a * alpha + inv_w_b * beta + inv_w_c * gamma;
+
+  // Using the inverse w as is is incorrect, as nearer objects get lesser inverse w values than farther ones.
+  // As such, we need to subtract the inverse w from 1.0.
+  float transformed_inverse_w = 1.0 - inverse_w;
+  if (transformed_inverse_w < z_buffer[(window_width * yi) + xi]) // Draw only if the current depth is less than what is in the z-buffer
+  {
+    draw_pixel(xi, yi, color);
+    z_buffer[(window_width * yi) + xi] = transformed_inverse_w;
+  }
 }
 
 void draw_texel(int xi, int yi,
@@ -136,10 +169,8 @@ void draw_texel(int xi, int yi,
   float transformed_inverse_w = 1.0 - inverse_w;
   if (transformed_inverse_w < z_buffer[(window_width * yi) + xi]) // Draw only if the current depth is less than what is in the z-buffer
   {
-    // printf("before: %f\t", z_buffer[get_pixel(xi, yi)]);
     draw_pixel(xi, yi, texture[texture_width * texture_y + texture_x]);
     z_buffer[(window_width * yi) + xi] = transformed_inverse_w;
-    // printf("after: %f\n", z_buffer[get_pixel(xi, yi)]);
   }
 }
 
@@ -266,87 +297,4 @@ vec3_t barycentric_weights(vec2_t a, vec2_t b, vec2_t c, vec2_t p)
   vec3_t barycentric_coordinates = {
       alpha, beta, gamma};
   return barycentric_coordinates;
-}
-
-// Triangle Sorting
-
-void mergesort_triangle_merge(triangle_t *a, triangle_t *b, size_t n, size_t start, size_t mid, size_t end)
-{
-  size_t i = start;
-  size_t j = mid;
-
-  for (size_t k = start; k < end; k++)
-  {
-    if (i < mid && (j >= end || a[i].depth >= b[j].depth))
-    {
-      b[k] = a[i];
-      i++;
-    }
-    else
-    {
-      b[k] = a[j];
-      j++;
-    }
-  }
-}
-
-void mergesort_triangle_partition(triangle_t *a, triangle_t *b, size_t n, size_t start, size_t end)
-{
-  if (end - start <= 1) // end - start <= 1, meaning that the partition size is 1
-  {
-    return;
-  }
-
-  size_t mid = (start + end) / 2;
-
-  mergesort_triangle_partition(b, a, n, start, mid);
-  mergesort_triangle_partition(b, a, n, mid, end);
-
-  mergesort_triangle_merge(b, a, n, start, mid, end);
-}
-
-void mergesort_triangle_by_depth(triangle_t *triangles)
-{
-  size_t n = array_length(triangles);
-  triangle_t *b = (triangle_t *)malloc(sizeof(triangle_t) * n);
-  memcpy(b, triangles, sizeof(triangle_t) * n);
-
-  mergesort_triangle_partition(triangles, b, n, 0, n);
-
-  free(b);
-
-  assert(n == array_length(triangles));
-}
-
-void insertion_sort_triangle_by_depth(triangle_t *triangles)
-{
-  size_t n = array_length(triangles);
-  for (int slot = 1; slot < n; slot++)
-  {
-    int i = slot - 1;
-    triangle_t x = triangles[i + 1];
-    while (i > 0 && x.depth > triangles[i].depth)
-    {
-      triangles[i + 1] = triangles[i];
-      i--;
-    }
-    triangles[i + 1] = x;
-  }
-}
-
-void bubble_sort_triangle_by_depth(triangle_t *triangles)
-{
-  size_t n = array_length(triangles);
-  for (int i = 0; i < n; i++)
-  {
-    for (int j = 1; j < n - i; j++)
-    {
-      if (triangles[j - 1].depth <= triangles[j].depth)
-      {
-        triangle_t temp = triangles[j - 1];
-        triangles[j - 1] = triangles[j];
-        triangles[j] = temp;
-      }
-    }
-  }
 }
