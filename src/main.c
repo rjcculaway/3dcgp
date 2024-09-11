@@ -358,6 +358,7 @@ void render(void)
 
 void free_resources(void)
 {
+  upng_free(png_texture);
   free(color_buffer);
   color_buffer = NULL;
   array_free(mesh.faces);
