@@ -5,6 +5,8 @@
 #include "math.h"
 #include <assert.h>
 
+#define MILLISECONDS_PER_SECOND 1000
+
 float deg_to_rad(float deg);
 float rad_to_deg(float rad);
 
