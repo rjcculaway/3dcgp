@@ -31,9 +31,6 @@ mat4_t world_matrix;
 mat4_t view_matrix;
 mat4_t projection_matrix;
 
-// Up vector for the view matrix
-const vec3_t up = {0, 1, 0};
-
 bool setup(void)
 {
   // Allocate memory for the color buffer
@@ -99,17 +96,25 @@ void process_input(void)
     case SDLK_ESCAPE:
       is_running = false;
       break;
-    case SDLK_UP:
-      camera.position.z += 0.1;
+    case SDLK_w: // Move forward
+      camera.forward_velocity = vec3_mul(camera.direction, 5.0 * delta_time);
+      camera.position = vec3_add(camera.position, camera.forward_velocity);
       break;
-    case SDLK_DOWN:
-      camera.position.z -= 0.1;
+    case SDLK_s: // Move backwards
+      camera.forward_velocity = vec3_mul(camera.direction, 5.0 * delta_time);
+      camera.position = vec3_sub(camera.position, camera.forward_velocity);
       break;
-    case SDLK_LEFT:
-      camera.position.x -= 0.1;
+    case SDLK_a: // Rotate left
+      camera.yaw -= 1.0 * delta_time;
       break;
-    case SDLK_RIGHT:
-      camera.position.x += 0.1;
+    case SDLK_d: // Rotate right
+      camera.yaw += 1.0 * delta_time;
+      break;
+    case SDLK_UP: // Move up
+      camera.position.y += 3.0 * delta_time;
+      break;
+    case SDLK_DOWN: // Move down
+      camera.position.y -= 3.0 * delta_time;
       break;
     case SDLK_1:
       current_render_method = RENDER_WIREFRAME_DOT;
@@ -132,10 +137,12 @@ void process_input(void)
     case SDLK_c:
       current_culling_option = CULLING_BACKFACE;
       break;
-    case SDLK_d:
+    case SDLK_x:
       current_culling_option = CULLING_NONE;
       break;
     }
+    break;
+  case SDL_KEYUP:
     break;
   default:
     break;
@@ -160,18 +167,14 @@ void update(void)
   num_triangles_to_render = 0;
 
   // Mesh Animation
-  mesh.rotation.x += 0.6 * delta_time;
-  mesh.rotation.y += 0.6 * delta_time;
-  mesh.rotation.z += 0.6 * delta_time;
+  // mesh.rotation.x += 0.6 * delta_time;
+  // mesh.rotation.y += 0.6 * delta_time;
+  // mesh.rotation.z += 0.6 * delta_time;
 
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
   // mesh.translation.x += 0.01;
   mesh.translation.z = 4.0;
-
-  // Camera Animation
-  camera.position.x += 0.008 * delta_time;
-  camera.position.y += 0.008 * delta_time;
 
   // Create a scale, rotation, translation matrix
   mat4_t scale_mat = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.y);
@@ -191,8 +194,14 @@ void update(void)
   world_matrix = mat4_matmul_mat4(translation_mat, world_matrix);
 
   // Create a view matrix to transform the coordinate system to the camera's
-  const vec3_t target = {0, 0, 4.0};
-  view_matrix = mat4_look_at(camera.position, target, up);
+  vec3_t target = {0, 0, 1};
+  mat4_t camera_rotation_m = mat4_make_rotation_y(camera.yaw);
+  camera.direction = vec3_from_vec4(mat4_matmul_vec(camera_rotation_m, vec4_from_vec3(target)));
+
+  // Offset the target
+  target = vec3_add(camera.position, camera.direction);
+
+  view_matrix = mat4_look_at(camera.position, target, CAMERA_UP);
 
   // Multiply the world matrix by the view matrix to combine the transformations
   mat4_t view_from_world_matrix = mat4_matmul_mat4(view_matrix, world_matrix);

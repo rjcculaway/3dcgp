@@ -8,7 +8,7 @@
 
 #include "vector.h"
 
-#define FPS 60
+#define FPS 200
 #define FRAME_TIME (1000 / FPS)
 
 /**
