@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include <SDL.h>
 
 #include "utils.h"
@@ -142,9 +143,10 @@ void update(void)
     SDL_Delay(time_to_wait); // Delay update until enough time has passed.
   }
 
-  num_triangles_to_render = 0;
-
   previous_frame_time = SDL_GetTicks64();
+
+  memset(triangles_to_render, 0, sizeof(triangle_t) * MAX_TRIANGLES_PER_MESH);
+  num_triangles_to_render = 0;
 
   // mesh.rotation.x += 0.01;
   mesh.rotation.y += 0.01;

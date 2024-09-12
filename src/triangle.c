@@ -15,6 +15,13 @@ void fill_flat_bottom_triangle(triangle_t triangle, color_t color)
   float inv_slope1 = y1 != y0 ? ((float)(x1 - x0)) / abs((int)y1 - (int)y0) : 0; // Inverse slope (run over rise), because in this case y is the independent value
   float inv_slope2 = y2 != y0 ? ((float)(x2 - x0)) / abs((int)y2 - (int)y0) : 0;
 
+  // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
+  // Get the reciprocal all of the ws of the points
+  // w is initially the z component
+  float inv_w_a = 1 / triangle.points[0].w;
+  float inv_w_b = 1 / triangle.points[1].w;
+  float inv_w_c = 1 / triangle.points[2].w;
+
   if (y0 != y1)
   {
     for (int yi = y0; yi <= y1; yi++)
@@ -30,7 +37,7 @@ void fill_flat_bottom_triangle(triangle_t triangle, color_t color)
       for (int xi = x_start; xi < x_end; xi++)
       {
         // We cannot use draw_line here as we need to sample the color of the texture
-        draw_triangle_pixel(xi, yi, triangle.points[0], triangle.points[1], triangle.points[2], color);
+        draw_triangle_pixel(xi, yi, triangle.points[0], triangle.points[1], triangle.points[2], inv_w_a, inv_w_b, inv_w_c, color);
       }
     }
   }
@@ -61,6 +68,13 @@ void fill_flat_top_triangle(triangle_t triangle, color_t color)
   float inv_slope1 = y2 != y1 ? ((float)(x2 - x1)) / abs(y2 - y1) : 0; // Inverse slope (run over rise), because in this case y is the independent value
   float inv_slope2 = y2 != y0 ? ((float)(x2 - x0)) / abs(y2 - y0) : 0;
 
+  // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
+  // Get the reciprocal all of the ws of the points
+  // w is initially the z component
+  float inv_w_a = 1 / triangle.points[0].w;
+  float inv_w_b = 1 / triangle.points[1].w;
+  float inv_w_c = 1 / triangle.points[2].w;
+
   for (int yi = y1; yi <= y2; yi++)
   {
     int x_start = x1 + (yi - y1) * inv_slope1;
@@ -74,7 +88,7 @@ void fill_flat_top_triangle(triangle_t triangle, color_t color)
     for (int xi = x_start; xi < x_end; xi++)
     {
       // We cannot use draw_line here as we need to sample the color of the texture
-      draw_triangle_pixel(xi, yi, triangle.points[0], triangle.points[1], triangle.points[2], color);
+      draw_triangle_pixel(xi, yi, triangle.points[0], triangle.points[1], triangle.points[2], inv_w_a, inv_w_b, inv_w_c, color);
     }
     x_start -= inv_slope1;
     x_end -= inv_slope2;
@@ -102,6 +116,7 @@ void draw_filled_triangle(triangle_t triangle, color_t color)
 
 void draw_triangle_pixel(int xi, int yi,
                          vec4_t point_a, vec4_t point_b, vec4_t point_c,
+                         float inv_w_a, float inv_w_b, float inv_w_c,
                          color_t color)
 {
   vec2_t p = {.x = xi, .y = yi};
@@ -110,14 +125,6 @@ void draw_triangle_pixel(int xi, int yi,
   float alpha = weights.x;
   float beta = weights.y;
   float gamma = weights.z;
-
-  // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
-  // Get the reciprocal all of the ws of the points
-  // w is initially the z component
-  // We can extract this part outside of this function to reduce the amount of divisions performed
-  float inv_w_a = 1 / point_a.w;
-  float inv_w_b = 1 / point_b.w;
-  float inv_w_c = 1 / point_c.w;
 
   // Interpolate using barycentric coordinates, multiplying by 1 / w of the point for correct perspective texture mapping (instead of affine texture mapping)
   float inverse_w = inv_w_a * alpha + inv_w_b * beta + inv_w_c * gamma;
@@ -134,6 +141,7 @@ void draw_triangle_pixel(int xi, int yi,
 
 void draw_texel(int xi, int yi,
                 vec4_t point_a, vec4_t point_b, vec4_t point_c,
+                float inv_w_a, float inv_w_b, float inv_w_c,
                 tex2_t uv_a, tex2_t uv_b, tex2_t uv_c, color_t *texture)
 {
   vec2_t p = {.x = xi, .y = yi};
@@ -142,14 +150,6 @@ void draw_texel(int xi, int yi,
   float alpha = weights.x;
   float beta = weights.y;
   float gamma = weights.z;
-
-  // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
-  // Get the reciprocal all of the ws of the points
-  // w is initially the z component
-  // We can extract this part outside of this function to reduce the amount of divisions performed
-  float inv_w_a = 1 / point_a.w;
-  float inv_w_b = 1 / point_b.w;
-  float inv_w_c = 1 / point_c.w;
 
   // Interpolate using barycentric coordinates, multiplying by 1 / w of the point for correct perspective texture mapping (instead of affine texture mapping)
   float u = uv_a.u * inv_w_a * alpha + uv_b.u * inv_w_b * beta + uv_c.u * inv_w_c * gamma;
@@ -228,6 +228,13 @@ void draw_textured_triangle(
   float inv_slope1 = y2 != y1 ? ((float)(x2 - x1)) / abs(y2 - y1) : 0; // Inverse slope (run over rise), because in this case y is the independent value
   float inv_slope2 = y2 != y0 ? ((float)(x2 - x0)) / abs(y2 - y0) : 0;
 
+  // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
+  // Get the reciprocal all of the ws of the points
+  // w is initially the z component
+  float inv_w_a = 1 / point_a.w;
+  float inv_w_b = 1 / point_b.w;
+  float inv_w_c = 1 / point_c.w;
+
   if (y2 != y1)
   {
     for (int yi = y1; yi <= y2; yi++)
@@ -243,7 +250,9 @@ void draw_textured_triangle(
       for (int xi = x_start; xi < x_end; xi++)
       {
         // We cannot use draw_line here as we need to sample the color of the texture
-        draw_texel(xi, yi, point_a, point_b, point_c, uv_a, uv_b, uv_c, texture);
+        draw_texel(xi, yi, point_a, point_b, point_c,
+                   inv_w_a, inv_w_b, inv_w_c,
+                   uv_a, uv_b, uv_c, texture);
       }
       x_start -= inv_slope1;
       x_end -= inv_slope2;
@@ -269,7 +278,9 @@ void draw_textured_triangle(
       for (int xi = x_start; xi < x_end; xi++)
       {
         // We cannot use draw_line here as we need to sample the color of the texture
-        draw_texel(xi, yi, point_a, point_b, point_c, uv_a, uv_b, uv_c, texture);
+        draw_texel(xi, yi, point_a, point_b, point_c,
+                   inv_w_a, inv_w_b, inv_w_c,
+                   uv_a, uv_b, uv_c, texture);
       }
     }
   }
