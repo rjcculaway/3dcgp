@@ -174,3 +174,31 @@ vec4_t mat4_matmul_vec_project(mat4_t mat_proj, vec4_t v)
   }
   return projected;
 }
+
+mat4_t mat4_look_at(vec3_t eye, vec3_t target, vec3_t up)
+{
+  // The idea behind a look at matrix is to move the camera to the origin.
+  // In other words, move all vertices such that the camera IS the origin.
+  // To do so, the "camera" must be moved to the origin and rotated such that it faces our +z (away from the monitor)
+
+  // Multiplying the translation matrix by the INVERTED rotation matrix does that.
+  // There is no need to perform actual inversion; since the rotation matrix is orthogonal (linearly independent),
+  // all we need to do is transpose the rotation matrix. This transpose will already be baked into the created matrix.
+
+  // To create the look at matrix, we need the forward (z), up (y), and right (x) vectors.
+  vec3_t z = vec3_normalize(vec3_sub(target, eye));
+  vec3_t x = vec3_normalize(vec3_cross(up, z));
+  vec3_t y = vec3_cross(z, x);
+
+  // | x.x  x.y  x.z  -dot(x, eye) |
+  // | y.x  y.y  y.z  -dot(y, eye) |
+  // | z.x  z.y  z.z  -dot(z, eye) |
+  // |   0    0    0             1 |
+
+  mat4_t look_at_matrix = {{{x.x, x.y, x.z, -vec3_dot(x, eye)},
+                            {y.x, y.y, y.z, -vec3_dot(y, eye)},
+                            {z.x, z.y, z.z, -vec3_dot(z, eye)},
+                            {0, 0, 0, 1}}};
+
+  return look_at_matrix;
+}

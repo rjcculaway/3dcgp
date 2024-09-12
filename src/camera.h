@@ -7,11 +7,13 @@
 typedef struct camera
 {
   vec3_t position;
-  vec3_t rotation;
+  vec3_t direction;
   float aspect_ratio;
   float fov_angle;
   float z_far;
   float z_near;
 } camera_t;
+
+extern camera_t camera;
 
 #endif

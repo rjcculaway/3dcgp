@@ -20,8 +20,15 @@ culling_option current_culling_option = CULLING_BACKFACE;
 triangle_t triangles_to_render[MAX_TRIANGLES_PER_MESH];
 int num_triangles_to_render = 0;
 
-vec3_t camera_position = {.x = 0, .y = 0, .z = 0};
+//--------------------------------------------
+// Global transformation matrices
+//--------------------------------------------
+mat4_t world_matrix;
+mat4_t view_matrix;
 mat4_t projection_matrix;
+
+// Up vector for the view matrix
+const vec3_t up = {0, 1, 0};
 
 bool is_running = false;
 uint64_t previous_frame_time = 0;
@@ -57,10 +64,10 @@ bool setup(void)
       window_height);
 
   // Load texture data from .png file
-  load_png_texture_data("./assets/drone.png");
+  load_png_texture_data("./assets/efa.png");
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/drone.obj");
+  load_mesh_from_file("./assets/efa.obj");
 
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
@@ -92,16 +99,16 @@ void process_input(void)
       is_running = false;
       break;
     case SDLK_UP:
-      camera_position.z -= 0.1;
+      camera.position.z += 0.1;
       break;
     case SDLK_DOWN:
-      camera_position.z += 0.1;
+      camera.position.z -= 0.1;
       break;
     case SDLK_LEFT:
-      camera_position.x -= 0.1;
+      camera.position.x -= 0.1;
       break;
     case SDLK_RIGHT:
-      camera_position.x += 0.1;
+      camera.position.x += 0.1;
       break;
     case SDLK_1:
       current_render_method = RENDER_WIREFRAME_DOT;
@@ -148,14 +155,19 @@ void update(void)
   memset(triangles_to_render, 0, sizeof(triangle_t) * MAX_TRIANGLES_PER_MESH);
   num_triangles_to_render = 0;
 
-  // mesh.rotation.x += 0.01;
-  mesh.rotation.y += 0.01;
+  // Mesh Animation
+  // mesh.rotation.x += 0.006;
+  // mesh.rotation.y += 0.01;
   // mesh.rotation.z += 0.01;
 
   // mesh.scale.x += 0.002;
   // mesh.scale.y += 0.001;
   // mesh.translation.x += 0.01;
-  mesh.translation.z = 5.0;
+  mesh.translation.z = 4.0;
+
+  // Camera Animation
+  camera.position.x += 0.008;
+  camera.position.y += 0.008;
 
   // Create a scale, rotation, translation matrix
   mat4_t scale_mat = mat4_make_scale(mesh.scale.x, mesh.scale.y, mesh.scale.y);
@@ -165,7 +177,7 @@ void update(void)
   mat4_t translation_mat = mat4_make_translation(mesh.translation.x, mesh.translation.y, mesh.translation.z);
 
   // Create a world matrix to combine the three transformations
-  mat4_t world_matrix = mat4_identity();
+  world_matrix = mat4_identity();
 
   // Multiply the transformations to the world matrix
   world_matrix = mat4_matmul_mat4(scale_mat, world_matrix);
@@ -173,6 +185,13 @@ void update(void)
   world_matrix = mat4_matmul_mat4(rotation_y_mat, world_matrix);
   world_matrix = mat4_matmul_mat4(rotation_x_mat, world_matrix);
   world_matrix = mat4_matmul_mat4(translation_mat, world_matrix);
+
+  // Create a view matrix to transform the coordinate system to the camera's
+  const vec3_t target = {0, 0, 4.0};
+  view_matrix = mat4_look_at(camera.position, target, up);
+
+  // Multiply the world matrix by the view matrix to combine the transformations
+  mat4_t view_from_world_matrix = mat4_matmul_mat4(view_matrix, world_matrix);
 
   for (int i = 0; i < array_length(mesh.faces); i++)
   {
@@ -190,8 +209,8 @@ void update(void)
     {
       vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
 
-      // Multiply the world matrix to the original vector
-      transformed_vertex = mat4_matmul_vec(world_matrix, transformed_vertex);
+      // Multiply the view-world matrix to the original vector
+      transformed_vertex = mat4_matmul_vec(view_from_world_matrix, transformed_vertex);
 
       transformed_vertices[j] = transformed_vertex;
     }
@@ -213,7 +232,9 @@ void update(void)
     vec3_t normal = vec3_normalize(vec3_cross(
         vec_ab,
         vec_ac));
-    vec3_t camera_ray = vec3_sub(camera_position, vec_a); // Vector from camera to point A
+    vec3_t origin = {0, 0, 0};
+    // There is no need to use the camera position for the camera ray. By the end of view matrix multiplication, the camera WILL be at the origin.
+    vec3_t camera_ray = vec3_sub(origin, vec_a); // Vector from camera to point A
 
     float dot = vec3_dot(normal, camera_ray);
 
