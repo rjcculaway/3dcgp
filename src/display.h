@@ -1,5 +1,5 @@
-#ifndef DISPLAY_3DCGP
-#define DISPLAY_3DCGP
+#ifndef DISPLAY_RENENGINE_SFW
+#define DISPLAY_RENENGINE_SFW
 
 #include <stdio.h>
 #include <stdint.h>

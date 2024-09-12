@@ -1,5 +1,5 @@
-#ifndef TEXTURE_3DCGP
-#define TEXTURE_3DCGP
+#ifndef TEXTURE_RENENGINE_SFW
+#define TEXTURE_RENENGINE_SFW
 
 #include <stdint.h>
 #include "../upng/upng.h"

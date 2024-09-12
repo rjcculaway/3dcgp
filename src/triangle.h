@@ -1,5 +1,5 @@
-#ifndef TRIANGLE_3DCGP
-#define TRIANGLE_3DCGP
+#ifndef TRIANGLE_RENENGINE_SFW
+#define TRIANGLE_RENENGINE_SFW
 
 #include <stdint.h>
 

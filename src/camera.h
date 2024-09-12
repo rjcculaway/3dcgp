@@ -1,5 +1,5 @@
-#ifndef CAMERA_3DCGP
-#define CAMERA_3DCGP
+#ifndef CAMERA_RENENGINE_SFW
+#define CAMERA_RENENGINE_SFW
 
 #include "vector.h"
 #include "matrix.h"

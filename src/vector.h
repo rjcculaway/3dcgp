@@ -1,5 +1,5 @@
-#ifndef VECTOR_3DCGP
-#define VECTOR_3DCGP
+#ifndef VECTOR_RENENGINE_SFW
+#define VECTOR_RENENGINE_SFW
 
 #include <math.h>
 

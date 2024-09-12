@@ -1,5 +1,5 @@
-#ifndef MESH_3DCGP
-#define MESH_3DCGP
+#ifndef MESH_RENENGINE_SFW
+#define MESH_RENENGINE_SFW
 
 #include "vector.h"
 #include "triangle.h"

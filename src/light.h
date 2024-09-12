@@ -1,5 +1,5 @@
-#ifndef LIGHT_3DCGP
-#define LIGHT_3DCGP
+#ifndef LIGHT_RENENGINE_SFW
+#define LIGHT_RENENGINE_SFW
 
 #include "vector.h"
 #include "display.h"

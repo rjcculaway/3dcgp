@@ -1,5 +1,5 @@
-#ifndef MATRIX_3DCGP
-#define MATRIX_3DCGP
+#ifndef MATRIX_RENENGINE_SFW
+#define MATRIX_RENENGINE_SFW
 
 #include "vector.h"
 
