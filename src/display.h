@@ -26,11 +26,11 @@ typedef enum render_method
   RENDER_TEXTURED_WIREFRAME_TRIANGLE,
 } render_method;
 
-typedef enum culling_option
+typedef enum backface_culling_option
 {
   CULLING_NONE,
   CULLING_BACKFACE
-} culling_option;
+} backface_culling_option;
 
 typedef uint32_t color_t;
 

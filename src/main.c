@@ -9,12 +9,13 @@
 #include "vector.h"
 #include "matrix.h"
 #include "display.h"
+#include "clipping.h"
 #include "mesh.h"
 #include "camera.h"
 #include "light.h"
 
 render_method current_render_method = RENDER_TEXTURED_TRIANGLE;
-culling_option current_culling_option = CULLING_BACKFACE;
+backface_culling_option current_backface_culling_option = CULLING_BACKFACE;
 
 bool is_running = false;
 uint64_t previous_frame_time = 0;
@@ -76,6 +77,9 @@ bool setup(void)
   float z_far = 100.0;
   projection_matrix = mat4_make_perspective(fov, aspect, z_near, z_far);
 
+  // Initialize the frustum planes
+  initialize_frustum_planes(fov, z_near, z_far);
+
   return true;
 }
 
@@ -135,10 +139,10 @@ void process_input(void)
       current_render_method = RENDER_TEXTURED_WIREFRAME_TRIANGLE;
       break;
     case SDLK_c:
-      current_culling_option = CULLING_BACKFACE;
+      current_backface_culling_option = CULLING_BACKFACE;
       break;
     case SDLK_x:
-      current_culling_option = CULLING_NONE;
+      current_backface_culling_option = CULLING_NONE;
       break;
     }
     break;
@@ -251,7 +255,7 @@ void update(void)
 
     float dot = vec3_dot(normal, camera_ray);
 
-    switch (current_culling_option)
+    switch (current_backface_culling_option)
     {
     case CULLING_NONE:
       break;
