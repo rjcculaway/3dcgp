@@ -35,6 +35,7 @@ vec2_t vec2_mul(vec2_t v, float c);
 vec2_t vec2_div(vec2_t v, float c);
 float vec2_dot(vec2_t u, vec2_t v);
 vec2_t vec2_normalize(vec2_t v);
+vec2_t vec2_lerp(vec2_t u, vec2_t v, float t);
 
 // Vector 3D Functions
 vec3_t vec3_create(float x, float y, float z);
@@ -50,6 +51,7 @@ vec3_t vec3_div(vec3_t v, float c);
 float vec3_dot(vec3_t u, vec3_t v);
 vec3_t vec3_cross(vec3_t u, vec3_t v);
 vec3_t vec3_normalize(vec3_t v);
+vec3_t vec3_lerp(vec3_t u, vec3_t v, float t);
 
 // Vector 4D Functions
 vec4_t vec4_create(float x, float y, float z, float w);
@@ -65,6 +67,7 @@ vec4_t vec4_div(vec4_t v, float c);
 float vec4_dot(vec4_t u, vec4_t v);
 vec4_t vec4_cross(vec4_t u, vec4_t v);
 vec4_t vec4_normalize(vec4_t v);
+vec4_t vec4_lerp(vec4_t u, vec4_t v, float t);
 
 // Conversion Functions
 vec4_t vec4_from_vec3(vec3_t v);

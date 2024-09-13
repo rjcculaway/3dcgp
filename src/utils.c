@@ -30,3 +30,8 @@ double fovy_from_fovx(double fovx, double aspect_y)
 {
   return atan(tan(fovx / 2) * aspect_y) * 2;
 }
+
+double flerp(double first, double final, double t)
+{
+  return first + t * (final - first);
+}

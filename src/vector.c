@@ -69,6 +69,15 @@ vec2_t vec2_normalize(vec2_t v)
   return vec2_div(v, vec2_length(v));
 }
 
+vec2_t vec2_lerp(vec2_t u, vec2_t v, float t)
+{
+  vec2_t lerped = {
+      .x = flerp(u.x, v.x, t),
+      .y = flerp(u.y, v.y, t),
+  };
+  return lerped;
+}
+
 /**
  * Vector 3D
  */
@@ -180,6 +189,16 @@ vec3_t vec3_cross(vec3_t u, vec3_t v)
 vec3_t vec3_normalize(vec3_t v)
 {
   return vec3_div(v, vec3_length(v));
+}
+
+vec3_t vec3_lerp(vec3_t u, vec3_t v, float t)
+{
+  vec3_t lerped = {
+      .x = flerp(u.x, v.x, t),
+      .y = flerp(u.y, v.y, t),
+      .z = flerp(u.z, v.z, t),
+  };
+  return lerped;
 }
 
 /**
@@ -326,4 +345,15 @@ vec4_t vec4_cross(vec4_t u, vec4_t v)
 vec4_t vec4_normalize(vec4_t v)
 {
   return vec4_div(v, vec4_length(v));
+}
+
+vec4_t vec4_lerp(vec4_t u, vec4_t v, float t)
+{
+  vec4_t lerped = {
+      .x = flerp(u.x, v.x, t),
+      .y = flerp(u.y, v.y, t),
+      .z = flerp(u.z, v.z, t),
+      .w = flerp(u.w, v.w, t),
+  };
+  return lerped;
 }
