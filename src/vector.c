@@ -5,6 +5,12 @@
 /**
  * Vector 2D
  */
+
+vec2_t vec2_create(float x, float y)
+{
+  vec2_t result = {x, y};
+  return result;
+}
 float vec2_length_sq(vec2_t v)
 {
   return v.x * v.x + v.y * v.y;
@@ -66,6 +72,12 @@ vec2_t vec2_normalize(vec2_t v)
 /**
  * Vector 3D
  */
+
+vec3_t vec3_create(float x, float y, float z)
+{
+  vec3_t result = {x, y, z};
+  return result;
+}
 
 float vec3_length_sq(vec3_t v)
 {
@@ -173,6 +185,12 @@ vec3_t vec3_normalize(vec3_t v)
 /**
  * Vector 4D
  */
+
+vec4_t vec4_create(float x, float y, float z, float w)
+{
+  vec4_t result = {x, y, z, w};
+  return result;
+}
 
 // Converts a vec3_t to a vec4_t
 vec4_t vec4_from_vec3(vec3_t v)
