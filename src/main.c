@@ -63,10 +63,10 @@ bool setup(void)
       window_height);
 
   // Load texture data from .png file
-  load_png_texture_data("./assets/efa.png");
+  load_png_texture_data("./assets/cube.png");
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/efa.obj");
+  load_mesh_from_file("./assets/cube.obj");
 
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
@@ -210,7 +210,8 @@ void update(void)
   // Multiply the world matrix by the view matrix to combine the transformations
   mat4_t view_from_world_matrix = mat4_matmul_mat4(view_matrix, world_matrix);
 
-  for (int i = 0; i < array_length(mesh.faces); i++)
+  int num_faces = array_length(mesh.faces);
+  for (int i = 0; i < num_faces; i++)
   {
     face_t face = mesh.faces[i];
 
@@ -274,40 +275,59 @@ void update(void)
       continue;
     }
 
-    vec4_t projected_points[3];
-    for (int j = 0; j < 3; j++)
+    // TODO: Clip the vertices against the frustum planes before projection
+    polygon_t polygon = polygon_from_triangle(
+        vec3_from_vec4(transformed_vertices[0]),
+        vec3_from_vec4(transformed_vertices[1]),
+        vec3_from_vec4(transformed_vertices[2]));
+
+    clip_polygon(&polygon);
+
+    // TODO: Break down the polygon back to triangle(s) if needed
+    triangle_t triangles_after_clipping[MAX_NUM_POLYGON_VERTICES];
+    int num_triangles_after_clipping = 0;
+
+    triangles_from_polygon(&polygon, triangles_after_clipping, &num_triangles_after_clipping);
+
+    // Loop from all the triangles after clipping
+    for (int t = 0; t < num_triangles_after_clipping; t++)
     {
-      // Project
-      projected_points[j] = mat4_matmul_vec_project(projection_matrix, transformed_vertices[j]);
+      triangle_t clipped_triangle = triangles_after_clipping[t];
+      vec4_t projected_points[3];
+      for (int j = 0; j < 3; j++)
+      {
+        // Project
+        projected_points[j] = mat4_matmul_vec_project(projection_matrix, clipped_triangle.points[j]);
 
-      // Move to screen space
-      // Scale into the view
-      projected_points[j].x *= (window_width / 2.0);
-      projected_points[j].y *= (window_height / 2.0);
+        // Move to screen space
+        // Scale into the view
+        projected_points[j].x *= (window_width / 2.0);
+        projected_points[j].y *= (window_height / 2.0);
 
-      // Invert the y values since the y value in screen space grows downward from the top
-      projected_points[j].y *= -1;
+        // Invert the y values since the y value in screen space grows downward from the top
+        projected_points[j].y *= -1;
 
-      // Translate projected points to the middle of the screen
-      projected_points[j].x += (window_width / 2.0);
-      projected_points[j].y += (window_height / 2.0);
-    }
+        // Translate projected points to the middle of the screen
+        projected_points[j].x += (window_width / 2.0);
+        projected_points[j].y += (window_height / 2.0);
+      }
 
-    float light_intensity = light_lambertian(normal, sunlight.direction);
-    color_t final_color = light_apply_intensity(face.color, light_intensity);
+      float light_intensity = light_lambertian(normal, sunlight.direction);
+      color_t final_color = light_apply_intensity(face.color, light_intensity);
 
-    triangle_t projected_triangle = {
-        .points = {
-            {.x = projected_points[0].x, .y = projected_points[0].y, .z = projected_points[0].z, .w = projected_points[0].w},
-            {.x = projected_points[1].x, .y = projected_points[1].y, .z = projected_points[1].z, .w = projected_points[1].w},
-            {.x = projected_points[2].x, .y = projected_points[2].y, .z = projected_points[2].z, .w = projected_points[2].w}},
-        .texcoords = {mesh.texcoords[face.a_uv], mesh.texcoords[face.b_uv], mesh.texcoords[face.c_uv]},
-        .color = final_color,
-    };
-    if (num_triangles_to_render < MAX_TRIANGLES_PER_MESH)
-    {
-      triangles_to_render[num_triangles_to_render] = projected_triangle;
-      num_triangles_to_render++;
+      triangle_t projected_triangle = {
+          .points = {
+              {.x = projected_points[0].x, .y = projected_points[0].y, .z = projected_points[0].z, .w = projected_points[0].w},
+              {.x = projected_points[1].x, .y = projected_points[1].y, .z = projected_points[1].z, .w = projected_points[1].w},
+              {.x = projected_points[2].x, .y = projected_points[2].y, .z = projected_points[2].z, .w = projected_points[2].w}},
+          .texcoords = {mesh.texcoords[face.a_uv], mesh.texcoords[face.b_uv], mesh.texcoords[face.c_uv]},
+          .color = final_color,
+      };
+      if (num_triangles_to_render < MAX_TRIANGLES_PER_MESH)
+      {
+        triangles_to_render[num_triangles_to_render] = projected_triangle;
+        num_triangles_to_render++;
+      }
     }
   }
 
@@ -341,14 +361,14 @@ void render(void)
           x0, y0,
           x1, y1,
           x2, y2,
-          triangle.color);
+          0xFFFFFFFF);
       break;
     case RENDER_WIREFRAME_DOT:
       draw_triangle(
           x0, y0,
           x1, y1,
           x2, y2,
-          triangle.color);
+          0xFFFFFFFF);
       const int point_size = 4;
       draw_rect(x0 - point_size / 2, y0 - point_size / 2, point_size, point_size, 0xFFFF0000);
       draw_rect(x1 - point_size / 2, y1 - point_size / 2, point_size, point_size, 0xFFFF0000);
@@ -362,12 +382,12 @@ void render(void)
           x0, y0,
           x1, y1,
           x2, y2,
-          0xFF000000);
+          0xFFFFFFFF);
       break;
     case RENDER_TRIANGLE:
       draw_filled_triangle(
           triangle,
-          triangle.color);
+          0xFFFFFFFF);
       break;
     case RENDER_TEXTURED_TRIANGLE:
       draw_textured_triangle(
@@ -382,7 +402,7 @@ void render(void)
           x0, y0,
           x1, y1,
           x2, y2,
-          0xFF000000);
+          0xFFFFFFFF);
       break;
     default:
       fprintf(stderr, "WARNING: Invalid culling option selected!");
