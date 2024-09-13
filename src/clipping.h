@@ -31,13 +31,14 @@ typedef struct plane
 typedef struct polygon
 {
   vec3_t vertices[MAX_NUM_POLYGON_VERTICES];
+  tex2_t texcoords[MAX_NUM_POLYGON_VERTICES];
   int count;
 } polygon_t;
 
 extern plane_t frustum_planes[NUM_FRUSTUM_PLANES];
 
 void initialize_frustum_planes(float fovx, float fovy, float z_near, float z_far);
-polygon_t polygon_from_triangle(vec3_t v0, vec3_t v1, vec3_t v2);
+polygon_t polygon_from_triangle(vec3_t v0, vec3_t v1, vec3_t v2, tex2_t uv0, tex2_t uv1, tex2_t uv2);
 void clip_polygon_against_plane(polygon_t *polygon, plane_t plane);
 void clip_polygon(polygon_t *polygon);
 void triangles_from_polygon(polygon_t *polygon, triangle_t triangles_after_clipping[MAX_NUM_POLYGON_TRIANGLES], int *num_triangles_after_clipping);

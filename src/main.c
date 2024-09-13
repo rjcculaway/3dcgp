@@ -62,25 +62,28 @@ bool setup(void)
       window_width,
       window_height);
 
-  // Load texture data from .png file
-  load_png_texture_data("./assets/cube.png");
-
-  // Load mesh data from file
-  load_mesh_from_file("./assets/cube.obj");
-
-  printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
+  printf("resolution: %d x %d\n", window_width, window_height);
 
   // Setup the projection matrix
   float aspect_x = (float)window_width / (float)window_height;
   float aspect_y = (float)window_height / (float)window_width;
-  float fovy = M_PI / 4;
+  float fovy = M_PI / 3.0;
   float fovx = fovx_from_fovy(fovy, aspect_x);
   float z_near = 1.0;
   float z_far = 20.0;
+
   projection_matrix = mat4_make_perspective(fovy, aspect_y, z_near, z_far);
 
   // Initialize the frustum planes
   initialize_frustum_planes(fovx, fovy, z_near, z_far);
+
+  // Load texture data from .png file
+  load_png_texture_data("./assets/drone.png");
+
+  // Load mesh data from file
+  load_mesh_from_file("./assets/drone.obj");
+
+  printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
   return true;
 }
@@ -277,15 +280,18 @@ void update(void)
       continue;
     }
 
-    // TODO: Clip the vertices against the frustum planes before projection
+    // Clip the vertices against the frustum planes before projection
     polygon_t polygon = polygon_from_triangle(
         vec3_from_vec4(transformed_vertices[0]),
         vec3_from_vec4(transformed_vertices[1]),
-        vec3_from_vec4(transformed_vertices[2]));
+        vec3_from_vec4(transformed_vertices[2]),
+        face.a_uv,
+        face.b_uv,
+        face.c_uv);
 
     clip_polygon(&polygon);
 
-    // TODO: Break down the polygon back to triangle(s) if needed
+    // Break down the polygon back to triangle(s) if needed
     triangle_t triangles_after_clipping[MAX_NUM_POLYGON_VERTICES];
     int num_triangles_after_clipping = 0;
 
@@ -322,7 +328,7 @@ void update(void)
               {.x = projected_points[0].x, .y = projected_points[0].y, .z = projected_points[0].z, .w = projected_points[0].w},
               {.x = projected_points[1].x, .y = projected_points[1].y, .z = projected_points[1].z, .w = projected_points[1].w},
               {.x = projected_points[2].x, .y = projected_points[2].y, .z = projected_points[2].z, .w = projected_points[2].w}},
-          .texcoords = {mesh.texcoords[face.a_uv], mesh.texcoords[face.b_uv], mesh.texcoords[face.c_uv]},
+          .texcoords = {clipped_triangle.texcoords[0], clipped_triangle.texcoords[1], clipped_triangle.texcoords[2]},
           .color = final_color,
       };
       if (num_triangles_to_render < MAX_TRIANGLES_PER_MESH)

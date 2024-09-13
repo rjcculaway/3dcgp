@@ -37,12 +37,13 @@ void initialize_frustum_planes(float fovx, float fovy, float z_near, float z_far
   return;
 }
 
-polygon_t polygon_from_triangle(vec3_t v0, vec3_t v1, vec3_t v2)
+polygon_t polygon_from_triangle(vec3_t v0, vec3_t v1, vec3_t v2, tex2_t uv0, tex2_t uv1, tex2_t uv2)
 {
   polygon_t triangle = {
       .count = 3,
       .vertices = {
-          v0, v1, v2}};
+          v0, v1, v2},
+      .texcoords = {uv0, uv1, uv2}};
 
   return triangle;
 }
@@ -50,15 +51,18 @@ polygon_t polygon_from_triangle(vec3_t v0, vec3_t v1, vec3_t v2)
 void clip_polygon_against_plane(polygon_t *polygon, plane_t plane)
 {
   vec3_t inside[MAX_NUM_POLYGON_VERTICES];
+  tex2_t inside_texcoords[MAX_NUM_POLYGON_VERTICES];
   int inside_count = 0;
 
   vec3_t previous_vertex = polygon->vertices[polygon->count - 1]; // Previous vertex starts at the last vertex
+  tex2_t previous_texcoord = polygon->texcoords[polygon->count - 1];
   float previous_vertex_dot = vec3_dot(vec3_sub(previous_vertex, plane.point), plane.normal);
 
   // Loop through each vertex
   for (int i = 0; i < polygon->count; i++)
   {
     vec3_t current_vertex = polygon->vertices[i];
+    tex2_t current_texcoord = polygon->texcoords[i];
     float current_vertex_dot = vec3_dot(vec3_sub(current_vertex, plane.point), plane.normal);
 
     // If the previous is outside and the current is inside and vice versa
@@ -69,9 +73,13 @@ void clip_polygon_against_plane(polygon_t *polygon, plane_t plane)
       float t = previous_vertex_dot / (previous_vertex_dot - current_vertex_dot);
       // Using t, get the intersection point between the plane and the line formed by the two vertices:
       // I = Qp + t(Qc - Qp) -- A linear interpolation between Qp and Qc using t as the interpolation factor
-      vec3_t intersection = vec3_add(previous_vertex, vec3_mul(vec3_sub(current_vertex, previous_vertex), t));
+      vec3_t intersection = vec3_lerp(previous_vertex, current_vertex, t);
+      tex2_t intersection_uv = {
+          .u = flerp(previous_texcoord.u, current_texcoord.u, t),
+          .v = flerp(previous_texcoord.v, current_texcoord.v, t)};
 
       inside[inside_count] = intersection;
+      inside_texcoords[inside_count] = intersection_uv;
       inside_count++;
     }
 
@@ -79,15 +87,19 @@ void clip_polygon_against_plane(polygon_t *polygon, plane_t plane)
     if (is_current_vertex_inside)
     {
       inside[inside_count] = current_vertex;
+      inside_texcoords[inside_count] = current_texcoord;
       inside_count++;
     }
 
     previous_vertex = current_vertex;
+    previous_texcoord = current_texcoord;
     previous_vertex_dot = current_vertex_dot;
   }
   polygon->count = inside_count;
   // memset(polygon->vertices, 0, sizeof(vec3_t) * MAX_NUM_POLYGON_VERTICES);
-  memcpy(polygon->vertices, inside, sizeof(vec3_t) * inside_count); // Overwrite the current vertices of the polygon with all inside vertices
+  // Overwrite the current vertices of the polygon with all inside vertices
+  memcpy(polygon->vertices, inside, sizeof(vec3_t) * inside_count);
+  memcpy(polygon->texcoords, inside_texcoords, sizeof(tex2_t) * inside_count);
 }
 
 void triangles_from_polygon(polygon_t *polygon, triangle_t triangles_after_clipping[MAX_NUM_POLYGON_TRIANGLES], int *num_triangles_after_clipping)
@@ -109,9 +121,11 @@ void triangles_from_polygon(polygon_t *polygon, triangle_t triangles_after_clipp
   }
 
   vec4_t v0;
+  tex2_t uv0;
   if (polygon->count > 0)
   {
     v0 = vec4_from_vec3(polygon->vertices[0]);
+    uv0 = polygon->texcoords[0];
   }
   for (int i = 0; i < polygon->count - 2; i++)
   {
@@ -120,6 +134,9 @@ void triangles_from_polygon(polygon_t *polygon, triangle_t triangles_after_clipp
     triangle.points[0] = v0;
     triangle.points[1] = vec4_from_vec3(polygon->vertices[i + 1]);
     triangle.points[2] = vec4_from_vec3(polygon->vertices[i + 2]);
+    triangle.texcoords[0] = uv0;
+    triangle.texcoords[1] = polygon->texcoords[i + 1];
+    triangle.texcoords[2] = polygon->texcoords[i + 2];
     triangles_after_clipping[i] = triangle;
     (*num_triangles_after_clipping) += 1;
   }

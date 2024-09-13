@@ -23,6 +23,7 @@ void load_mesh_from_file(char *file_name)
   }
 
   char line[1024] = {0};
+
   while (fgets(line, 1024, file_handle) != NULL)
   {
     if (strncmp("v ", line, 2) == 0) // vertices
@@ -39,15 +40,18 @@ void load_mesh_from_file(char *file_name)
     }
     if (strncmp("f ", line, 2) == 0) // faces, ignore other values (%*d) for now
     {
+      int a_uv_idx = 0;
+      int b_uv_idx = 0;
+      int c_uv_idx = 0;
       face_t face;
-      sscanf(line, "f %d/%d/%*d %d/%d/%*d %d/%d/%*d", &(face.a), &(face.a_uv), &(face.b), &(face.b_uv), &(face.c), &(face.c_uv));
+      sscanf(line, "f %d/%d/%*d %d/%d/%*d %d/%d/%*d", &(face.a), &(a_uv_idx), &(face.b), &(b_uv_idx), &(face.c), &(c_uv_idx));
       // Indices start at 1 so we subtract 1 for zero-indexing.
       face.a--;
-      face.a_uv--;
+      face.a_uv = mesh.texcoords[a_uv_idx - 1];
       face.b--;
-      face.b_uv--;
+      face.b_uv = mesh.texcoords[b_uv_idx - 1];
       face.c--;
-      face.c_uv--;
+      face.c_uv = mesh.texcoords[c_uv_idx - 1];
       face.color = 0xFFFFFFFF;
       array_push(mesh.faces, face);
     }

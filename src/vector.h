@@ -2,6 +2,7 @@
 #define VECTOR_RENENGINE_SFW
 
 #include <math.h>
+#include "utils.h"
 
 typedef struct vec2
 {
