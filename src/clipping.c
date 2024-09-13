@@ -2,27 +2,29 @@
 
 plane_t frustum_planes[NUM_FRUSTUM_PLANES];
 
-void initialize_frustum_planes(float fov, float z_near, float z_far)
+void initialize_frustum_planes(float fovx, float fovy, float z_near, float z_far)
 {
-  float sin_half_angle = sin(fov / 2);
-  float cos_half_angle = sin(fov / 2);
+  float sin_half_angle_y = sin(fovy / 2);
+  float sin_half_angle_x = sin(fovx / 2);
+  float cos_half_angle_y = sin(fovy / 2);
+  float cos_half_angle_x = sin(fovx / 2);
 
   // Left Frustum Plane
   frustum_planes[LEFT_FRUSTUM_PLANE].point = vec3_create(0, 0, 0);
-  frustum_planes[LEFT_FRUSTUM_PLANE].normal = vec3_create(cos_half_angle, 0, sin_half_angle);
+  frustum_planes[LEFT_FRUSTUM_PLANE].normal = vec3_create(cos_half_angle_x, 0, sin_half_angle_x);
 
   // Right Frustum Plane
   frustum_planes[RIGHT_FRUSTUM_PLANE].point = vec3_create(0, 0, 0);
-  frustum_planes[RIGHT_FRUSTUM_PLANE].normal = vec3_create(-cos_half_angle, 0, sin_half_angle);
+  frustum_planes[RIGHT_FRUSTUM_PLANE].normal = vec3_create(-cos_half_angle_x, 0, sin_half_angle_x);
 
   // Top Frustum Plane
   frustum_planes[TOP_FRUSTUM_PLANE].point = vec3_create(0, 0, 0);
-  frustum_planes[TOP_FRUSTUM_PLANE].normal = vec3_create(0, -cos_half_angle, sin_half_angle);
+  frustum_planes[TOP_FRUSTUM_PLANE].normal = vec3_create(0, -cos_half_angle_y, sin_half_angle_y);
 
   // Bottom Frustum Plane
   frustum_planes[BOTTOM_FRUSTUM_PLANE]
       .point = vec3_create(0, 0, 0);
-  frustum_planes[BOTTOM_FRUSTUM_PLANE].normal = vec3_create(0, cos_half_angle, sin_half_angle);
+  frustum_planes[BOTTOM_FRUSTUM_PLANE].normal = vec3_create(0, cos_half_angle_y, sin_half_angle_y);
 
   // Near Frustum Plane
   frustum_planes[NEAR_FRUSTUM_PLANE].point = vec3_create(0, 0, z_near);

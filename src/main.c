@@ -71,14 +71,16 @@ bool setup(void)
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
   // Setup the projection matrix
-  float fov = M_PI / 3;
-  float aspect = (float)window_height / window_width;
-  float z_near = 0.1;
-  float z_far = 100.0;
-  projection_matrix = mat4_make_perspective(fov, aspect, z_near, z_far);
+  float aspect_x = (float)window_width / (float)window_height;
+  float aspect_y = (float)window_height / (float)window_width;
+  float fovy = M_PI / 4;
+  float fovx = fovx_from_fovy(fovy, aspect_x);
+  float z_near = 1.0;
+  float z_far = 20.0;
+  projection_matrix = mat4_make_perspective(fovy, aspect_y, z_near, z_far);
 
   // Initialize the frustum planes
-  initialize_frustum_planes(fov, z_near, z_far);
+  initialize_frustum_planes(fovx, fovy, z_near, z_far);
 
   return true;
 }

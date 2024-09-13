@@ -36,7 +36,7 @@ typedef struct polygon
 
 extern plane_t frustum_planes[NUM_FRUSTUM_PLANES];
 
-void initialize_frustum_planes(float fov, float z_near, float z_far);
+void initialize_frustum_planes(float fovx, float fovy, float z_near, float z_far);
 polygon_t polygon_from_triangle(vec3_t v0, vec3_t v1, vec3_t v2);
 void clip_polygon_against_plane(polygon_t *polygon, plane_t plane);
 void clip_polygon(polygon_t *polygon);

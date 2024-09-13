@@ -20,3 +20,13 @@ int clamp(int minimum, int maximum, int value)
   int min = value > maximum ? maximum : value;
   return minimum > min ? minimum : min;
 }
+
+double fovx_from_fovy(double fovy, double aspect_x)
+{
+  return atan(tan(fovy / 2) * aspect_x) * 2;
+}
+
+double fovy_from_fovx(double fovx, double aspect_y)
+{
+  return atan(tan(fovx / 2) * aspect_y) * 2;
+}

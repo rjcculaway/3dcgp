@@ -1,7 +1,7 @@
 #include "display.h"
 
-int window_width = 1440;
-int window_height = 900;
+int window_width = 800;
+int window_height = 600;
 
 SDL_Window *window = NULL;
 SDL_Renderer *renderer = NULL;
@@ -37,7 +37,7 @@ bool initialize_window(void)
       SDL_WINDOWPOS_CENTERED, // pos y
       window_width,           // width
       window_height,          // height
-      SDL_WINDOW_ALWAYS_ON_TOP);
+      SDL_WINDOW_BORDERLESS);
   if (!window)
   {
     fprintf(stderr, "ERROR: Failed reating SDL window.\n");
