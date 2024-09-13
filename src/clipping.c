@@ -4,10 +4,10 @@ plane_t frustum_planes[NUM_FRUSTUM_PLANES];
 
 void initialize_frustum_planes(float fovx, float fovy, float z_near, float z_far)
 {
-  float sin_half_angle_y = sin(fovy / 2);
+  float cos_half_angle_x = cos(fovx / 2);
   float sin_half_angle_x = sin(fovx / 2);
-  float cos_half_angle_y = sin(fovy / 2);
-  float cos_half_angle_x = sin(fovx / 2);
+  float cos_half_angle_y = cos(fovy / 2);
+  float sin_half_angle_y = sin(fovy / 2);
 
   // Left Frustum Plane
   frustum_planes[LEFT_FRUSTUM_PLANE].point = vec3_create(0, 0, 0);
@@ -22,8 +22,7 @@ void initialize_frustum_planes(float fovx, float fovy, float z_near, float z_far
   frustum_planes[TOP_FRUSTUM_PLANE].normal = vec3_create(0, -cos_half_angle_y, sin_half_angle_y);
 
   // Bottom Frustum Plane
-  frustum_planes[BOTTOM_FRUSTUM_PLANE]
-      .point = vec3_create(0, 0, 0);
+  frustum_planes[BOTTOM_FRUSTUM_PLANE].point = vec3_create(0, 0, 0);
   frustum_planes[BOTTOM_FRUSTUM_PLANE].normal = vec3_create(0, cos_half_angle_y, sin_half_angle_y);
 
   // Near Frustum Plane
@@ -119,6 +118,7 @@ void triangles_from_polygon(polygon_t *polygon, triangle_t triangles_after_clipp
     fprintf(stderr, "num_triangles_after_clipping not provided\n");
     return;
   }
+  (*num_triangles_after_clipping) = 0;
 
   vec4_t v0;
   tex2_t uv0;

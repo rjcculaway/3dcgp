@@ -23,3 +23,12 @@ void load_png_texture_data(char *file_path)
     }
     return;
 }
+
+tex2_t tex2_clone(tex2_t *t)
+{
+    tex2_t result = {
+        .u = t->u,
+        .v = t->v,
+    };
+    return result;
+}

@@ -11,6 +11,14 @@ vec2_t vec2_create(float x, float y)
   vec2_t result = {x, y};
   return result;
 }
+vec2_t vec2_clone(vec2_t *v)
+{
+  vec2_t result = {
+      .x = v->x,
+      .y = v->y,
+  };
+  return result;
+}
 float vec2_length_sq(vec2_t v)
 {
   return v.x * v.x + v.y * v.y;
@@ -85,6 +93,16 @@ vec2_t vec2_lerp(vec2_t u, vec2_t v, float t)
 vec3_t vec3_create(float x, float y, float z)
 {
   vec3_t result = {x, y, z};
+  return result;
+}
+
+vec3_t vec3_clone(vec3_t *v)
+{
+  vec3_t result = {
+      .x = v->x,
+      .y = v->y,
+      .z = v->z,
+  };
   return result;
 }
 
@@ -205,6 +223,15 @@ vec3_t vec3_lerp(vec3_t u, vec3_t v, float t)
  * Vector 4D
  */
 
+vec4_t vec4_clone(vec4_t *v)
+{
+  vec4_t result = {
+      .x = v->x,
+      .y = v->y,
+      .z = v->z,
+      .w = v->w};
+  return result;
+}
 vec4_t vec4_create(float x, float y, float z, float w)
 {
   vec4_t result = {x, y, z, w};

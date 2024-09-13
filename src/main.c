@@ -67,7 +67,7 @@ bool setup(void)
   // Setup the projection matrix
   float aspect_x = (float)window_width / (float)window_height;
   float aspect_y = (float)window_height / (float)window_width;
-  float fovy = M_PI / 3.0;
+  float fovy = M_PI / 3.0; // the same as 180/3, or 60deg
   float fovx = fovx_from_fovy(fovy, aspect_x);
   float z_near = 1.0;
   float z_far = 20.0;
@@ -78,10 +78,10 @@ bool setup(void)
   initialize_frustum_planes(fovx, fovy, z_near, z_far);
 
   // Load texture data from .png file
-  load_png_texture_data("./assets/drone.png");
+  load_png_texture_data("./assets/cube.png");
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/drone.obj");
+  load_mesh_from_file("./assets/cube.obj");
 
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
@@ -213,7 +213,7 @@ void update(void)
   view_matrix = mat4_look_at(camera.position, target, CAMERA_UP);
 
   // Multiply the world matrix by the view matrix to combine the transformations
-  mat4_t view_from_world_matrix = mat4_matmul_mat4(view_matrix, world_matrix);
+  mat4_t view_world_matrix = mat4_matmul_mat4(view_matrix, world_matrix);
 
   int num_faces = array_length(mesh.faces);
   for (int i = 0; i < num_faces; i++)
@@ -233,7 +233,7 @@ void update(void)
       vec4_t transformed_vertex = vec4_from_vec3(face_vertices[j]);
 
       // Multiply the view-world matrix to the original vector
-      transformed_vertex = mat4_matmul_vec(view_from_world_matrix, transformed_vertex);
+      transformed_vertex = mat4_matmul_vec(view_world_matrix, transformed_vertex);
 
       transformed_vertices[j] = transformed_vertex;
     }
@@ -252,9 +252,9 @@ void update(void)
 
     // Left-handed coordinate system (+z is away), so the order of the cross product
     // must be b-a x a-b
-    vec3_t normal = vec3_normalize(vec3_cross(
+    vec3_t normal = vec3_cross(
         vec_ab,
-        vec_ac));
+        vec_ac);
     vec3_t origin = {0, 0, 0};
     // There is no need to use the camera position for the camera ray. By the end of view matrix multiplication, the camera WILL be at the origin.
     vec3_t camera_ray = vec3_sub(origin, vec_a); // Vector from camera to point A
@@ -307,13 +307,21 @@ void update(void)
         // Project
         projected_points[j] = mat4_matmul_vec_project(projection_matrix, clipped_triangle.points[j]);
 
+        // Perspective Divide
+        if (projected_points[j].w != 0.0)
+        {
+          projected_points[j].x /= projected_points[j].w;
+          projected_points[j].y /= projected_points[j].w;
+          projected_points[j].z /= projected_points[j].w;
+        }
+
+        // Invert the y values since the y value in screen space grows downward from the top
+        projected_points[j].y *= -1;
+
         // Move to screen space
         // Scale into the view
         projected_points[j].x *= (window_width / 2.0);
         projected_points[j].y *= (window_height / 2.0);
-
-        // Invert the y values since the y value in screen space grows downward from the top
-        projected_points[j].y *= -1;
 
         // Translate projected points to the middle of the screen
         projected_points[j].x += (window_width / 2.0);
@@ -328,13 +336,12 @@ void update(void)
               {.x = projected_points[0].x, .y = projected_points[0].y, .z = projected_points[0].z, .w = projected_points[0].w},
               {.x = projected_points[1].x, .y = projected_points[1].y, .z = projected_points[1].z, .w = projected_points[1].w},
               {.x = projected_points[2].x, .y = projected_points[2].y, .z = projected_points[2].z, .w = projected_points[2].w}},
-          .texcoords = {clipped_triangle.texcoords[0], clipped_triangle.texcoords[1], clipped_triangle.texcoords[2]},
+          .texcoords = {{clipped_triangle.texcoords[0].u, clipped_triangle.texcoords[0].v}, {clipped_triangle.texcoords[1].u, clipped_triangle.texcoords[1].v}, {clipped_triangle.texcoords[2].u, clipped_triangle.texcoords[2].v}},
           .color = final_color,
       };
       if (num_triangles_to_render < MAX_TRIANGLES_PER_MESH)
       {
-        triangles_to_render[num_triangles_to_render] = projected_triangle;
-        num_triangles_to_render++;
+        triangles_to_render[num_triangles_to_render++] = projected_triangle;
       }
     }
   }
