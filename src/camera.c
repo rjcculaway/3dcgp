@@ -4,6 +4,7 @@ static camera_t camera = {
     .position = {0, 0, 0},
     .direction = {0, 0, 1},
     .forward_velocity = {0, 0, 0},
+    .pitch = 0.0f,
     .yaw = 0.0f};
 
 // Up vector for the view matrix
@@ -51,21 +52,23 @@ void set_camera_pitch(float pitch)
     camera.pitch = pitch;
 }
 
-void move_camera_z(float factor)
+void change_camera_forward_velocity_to_z(float factor)
 {
     camera.forward_velocity = vec3_mul(camera.direction, factor);
-    camera.position = vec3_add(camera.position, camera.forward_velocity);
 }
 
-void move_camera_y(float factor)
+void change_camera_forward_velocity_to_y(float factor)
 {
-    camera.forward_velocity = vec3_mul(vec3_create(0, 1, 0), factor);
-    camera.position = vec3_add(camera.position, camera.forward_velocity);
+    camera.forward_velocity = vec3_mul(CAMERA_UP, factor);
 }
 
-void move_camera_x(float factor)
+void change_camera_forward_velocity_to_x(float factor)
 {
     camera.forward_velocity = vec3_mul(vec3_cross(CAMERA_UP, camera.direction), factor);
+}
+
+void move_camera_by_forward_velocity(void)
+{
     camera.position = vec3_add(camera.position, camera.forward_velocity);
 }
 

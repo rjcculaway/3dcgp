@@ -28,9 +28,10 @@ void set_camera_forward_velocity(vec3_t forward_velocity);
 void set_camera_yaw(float yaw);
 void set_camera_pitch(float pitch);
 
-void move_camera_z(float factor);
-void move_camera_y(float factor);
-void move_camera_x(float factor);
+void change_camera_forward_velocity_to_z(float factor);
+void change_camera_forward_velocity_to_y(float factor);
+void change_camera_forward_velocity_to_x(float factor);
+void move_camera_by_forward_velocity(void);
 void rotate_camera_yaw(float angle);
 void rotate_camera_pitch(float angle);
 

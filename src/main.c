@@ -78,22 +78,22 @@ void process_input(void)
         is_running = false;
         break;
       case SDLK_w: // Move forward
-        move_camera_z(10.0 * delta_time);
+        change_camera_forward_velocity_to_z(10.0 * delta_time);
         break;
       case SDLK_s: // Move backwards
-        move_camera_z(-10.0 * delta_time);
+        change_camera_forward_velocity_to_z(-10.0 * delta_time);
         break;
       case SDLK_a: // Move left
-        move_camera_x(-10.0 * delta_time);
+        change_camera_forward_velocity_to_x(-10.0 * delta_time);
         break;
       case SDLK_d: // Move right
-        move_camera_x(10.0 * delta_time);
+        change_camera_forward_velocity_to_x(10.0 * delta_time);
         break;
       case SDLK_q:
-        move_camera_y(10.0 * delta_time);
+        change_camera_forward_velocity_to_y(10.0 * delta_time);
         break;
       case SDLK_e:
-        move_camera_y(-10.0 * delta_time);
+        change_camera_forward_velocity_to_y(-10.0 * delta_time);
         break;
       case SDLK_UP: // Rotate up
         rotate_camera_pitch(-5.0 * delta_time);
@@ -134,6 +134,27 @@ void process_input(void)
       }
       break;
     case SDL_KEYUP:
+      switch (event.key.keysym.sym)
+      {
+      case SDLK_w: // Move forward
+        set_camera_forward_velocity(vec3_create(0, 0, 0));
+        break;
+      case SDLK_s: // Move backwards
+        set_camera_forward_velocity(vec3_create(0, 0, 0));
+        break;
+      case SDLK_a: // Move left
+        set_camera_forward_velocity(vec3_create(0, 0, 0));
+        break;
+      case SDLK_d: // Move right
+        set_camera_forward_velocity(vec3_create(0, 0, 0));
+        break;
+      case SDLK_q:
+        set_camera_forward_velocity(vec3_create(0, 0, 0));
+        break;
+      case SDLK_e:
+        set_camera_forward_velocity(vec3_create(0, 0, 0));
+        break;
+      }
       break;
     default:
       break;
@@ -185,6 +206,8 @@ void update(void)
   world_matrix = mat4_matmul_mat4(rotation_x_mat, world_matrix);
   world_matrix = mat4_matmul_mat4(translation_mat, world_matrix);
 
+  // Update the camera position
+  move_camera_by_forward_velocity();
   // Create a view matrix to transform the coordinate system to the camera's
   vec3_t target = {0, 0, 1};
   mat4_t camera_rotation_m = mat4_matmul_mat4(
