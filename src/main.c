@@ -14,9 +14,6 @@
 #include "camera.h"
 #include "light.h"
 
-render_method current_render_method = RENDER_TEXTURED_TRIANGLE;
-backface_culling_option current_backface_culling_option = CULLING_BACKFACE;
-
 bool is_running = false;
 uint64_t previous_frame_time = 0;
 float delta_time = 0;
@@ -34,39 +31,12 @@ mat4_t projection_matrix;
 
 bool setup(void)
 {
-  // Allocate memory for the color buffer
-  // This is a contiguous block of memory but we will interpret it as a 2D array
-  color_buffer = (color_t *)malloc(sizeof(color_t) * window_width * window_height);
-
-  if (color_buffer == NULL)
-  {
-    fprintf(stderr, "ERROR: Failed to allocate memory for the color buffer.");
-    return false;
-  }
-
-  // Allocate memory for the z-buffer
-  // Also a contiguous block of memory interpreted as a 2D array
-  z_buffer = (float *)malloc(sizeof(float) * window_width * window_height);
-
-  if (z_buffer == NULL)
-  {
-    fprintf(stderr, "ERROR: Failed to allocate memory for the z-buffer.");
-    return false;
-  }
-
-  // Create the SDL Texture to display the color buffer
-  color_buffer_texture = SDL_CreateTexture(
-      renderer,
-      SDL_PIXELFORMAT_RGBA32,      // Pixel Format
-      SDL_TEXTUREACCESS_STREAMING, // Changes will automatically update the texture
-      window_width,
-      window_height);
-
-  printf("resolution: %d x %d\n", window_width, window_height);
+  set_backface_culling_option(CULLING_BACKFACE);
+  set_render_method(RENDER_TRIANGLE);
 
   // Setup the projection matrix
-  float aspect_x = (float)window_width / (float)window_height;
-  float aspect_y = (float)window_height / (float)window_width;
+  float aspect_x = (float)get_window_width() / (float)get_window_height();
+  float aspect_y = (float)get_window_height() / (float)get_window_width();
   float fovy = M_PI / 3.0; // the same as 180/3, or 60deg
   float fovx = fovx_from_fovy(fovy, aspect_x);
   float z_near = 1.0;
@@ -78,10 +48,10 @@ bool setup(void)
   initialize_frustum_planes(fovx, fovy, z_near, z_far);
 
   // Load texture data from .png file
-  load_png_texture_data("./assets/cube.png");
+  load_png_texture_data("./assets/f22.png");
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/cube.obj");
+  load_mesh_from_file("./assets/f22.obj");
 
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
@@ -92,69 +62,70 @@ void process_input(void)
 {
   SDL_Event event;
 
-  SDL_PollEvent(&event);
-
-  switch (event.type)
+  while (SDL_PollEvent(&event))
   {
-  case SDL_QUIT: // Close button
-    is_running = false;
-    break;
-  case SDL_KEYDOWN:
-    switch (event.key.keysym.sym)
+    switch (event.type)
     {
-    case SDLK_ESCAPE:
+    case SDL_QUIT: // Close button
       is_running = false;
       break;
-    case SDLK_w: // Move forward
-      camera.forward_velocity = vec3_mul(camera.direction, 5.0 * delta_time);
-      camera.position = vec3_add(camera.position, camera.forward_velocity);
+    case SDL_KEYDOWN:
+      switch (event.key.keysym.sym)
+      {
+      case SDLK_ESCAPE:
+        is_running = false;
+        break;
+      case SDLK_w: // Move forward
+        camera.forward_velocity = vec3_mul(camera.direction, 5.0 * delta_time);
+        camera.position = vec3_add(camera.position, camera.forward_velocity);
+        break;
+      case SDLK_s: // Move backwards
+        camera.forward_velocity = vec3_mul(camera.direction, 5.0 * delta_time);
+        camera.position = vec3_sub(camera.position, camera.forward_velocity);
+        break;
+      case SDLK_a: // Rotate left
+        camera.yaw -= 1.0 * delta_time;
+        break;
+      case SDLK_d: // Rotate right
+        camera.yaw += 1.0 * delta_time;
+        break;
+      case SDLK_UP: // Move up
+        camera.position.y += 3.0 * delta_time;
+        break;
+      case SDLK_DOWN: // Move down
+        camera.position.y -= 3.0 * delta_time;
+        break;
+      case SDLK_1:
+        set_render_method(RENDER_WIREFRAME_DOT);
+        break;
+      case SDLK_2:
+        set_render_method(RENDER_WIREFRAME);
+        break;
+      case SDLK_3:
+        set_render_method(RENDER_TRIANGLE);
+        break;
+      case SDLK_4:
+        set_render_method(RENDER_WIREFRAME_TRIANGLE);
+        break;
+      case SDLK_5:
+        set_render_method(RENDER_TEXTURED_TRIANGLE);
+        break;
+      case SDLK_6:
+        set_render_method(RENDER_TEXTURED_WIREFRAME_TRIANGLE);
+        break;
+      case SDLK_c:
+        set_backface_culling_option(CULLING_BACKFACE);
+        break;
+      case SDLK_x:
+        set_backface_culling_option(CULLING_NONE);
+        break;
+      }
       break;
-    case SDLK_s: // Move backwards
-      camera.forward_velocity = vec3_mul(camera.direction, 5.0 * delta_time);
-      camera.position = vec3_sub(camera.position, camera.forward_velocity);
+    case SDL_KEYUP:
       break;
-    case SDLK_a: // Rotate left
-      camera.yaw -= 1.0 * delta_time;
-      break;
-    case SDLK_d: // Rotate right
-      camera.yaw += 1.0 * delta_time;
-      break;
-    case SDLK_UP: // Move up
-      camera.position.y += 3.0 * delta_time;
-      break;
-    case SDLK_DOWN: // Move down
-      camera.position.y -= 3.0 * delta_time;
-      break;
-    case SDLK_1:
-      current_render_method = RENDER_WIREFRAME_DOT;
-      break;
-    case SDLK_2:
-      current_render_method = RENDER_WIREFRAME;
-      break;
-    case SDLK_3:
-      current_render_method = RENDER_TRIANGLE;
-      break;
-    case SDLK_4:
-      current_render_method = RENDER_WIREFRAME_TRIANGLE;
-      break;
-    case SDLK_5:
-      current_render_method = RENDER_TEXTURED_TRIANGLE;
-      break;
-    case SDLK_6:
-      current_render_method = RENDER_TEXTURED_WIREFRAME_TRIANGLE;
-      break;
-    case SDLK_c:
-      current_backface_culling_option = CULLING_BACKFACE;
-      break;
-    case SDLK_x:
-      current_backface_culling_option = CULLING_NONE;
+    default:
       break;
     }
-    break;
-  case SDL_KEYUP:
-    break;
-  default:
-    break;
   }
 }
 
@@ -261,7 +232,7 @@ void update(void)
 
     float dot = vec3_dot(normal, camera_ray);
 
-    switch (current_backface_culling_option)
+    switch (get_backface_culling_option())
     {
     case CULLING_NONE:
       break;
@@ -320,12 +291,12 @@ void update(void)
 
         // Move to screen space
         // Scale into the view
-        projected_points[j].x *= (window_width / 2.0);
-        projected_points[j].y *= (window_height / 2.0);
+        projected_points[j].x *= (get_window_width() / 2.0);
+        projected_points[j].y *= (get_window_height() / 2.0);
 
         // Translate projected points to the middle of the screen
-        projected_points[j].x += (window_width / 2.0);
-        projected_points[j].y += (window_height / 2.0);
+        projected_points[j].x += (get_window_width() / 2.0);
+        projected_points[j].y += (get_window_height() / 2.0);
       }
 
       float light_intensity = light_lambertian(normal, sunlight.direction);
@@ -351,11 +322,11 @@ void update(void)
 
 void render(void)
 {
-  SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
-  SDL_RenderClear(renderer);
+  clear_color_buffer(0xFF000000);
+  clear_z_buffer();
 
   draw_grid();
-  // draw_rect(0, 0, 200, 200, 0xFF00FF00);
+
   // Draw all projected points from the cube
   for (int i = 0; i < num_triangles_to_render; i++)
   {
@@ -369,7 +340,7 @@ void render(void)
     int x2 = triangle.points[2].x;
     int y2 = triangle.points[2].y;
 
-    switch (current_render_method)
+    switch (get_render_method())
     {
     case RENDER_WIREFRAME:
       draw_triangle(
@@ -402,7 +373,7 @@ void render(void)
     case RENDER_TRIANGLE:
       draw_filled_triangle(
           triangle,
-          0xFFFFFFFF);
+          triangle.color);
       break;
     case RENDER_TEXTURED_TRIANGLE:
       draw_textured_triangle(
@@ -420,25 +391,17 @@ void render(void)
           0xFFFFFFFF);
       break;
     default:
-      fprintf(stderr, "WARNING: Invalid culling option selected!");
+      fprintf(stderr, "WARNING: Invalid render option selected!");
       break;
     }
   }
 
   render_color_buffer();
-  clear_color_buffer(0xFF000000);
-  clear_z_buffer();
-
-  SDL_RenderPresent(renderer);
 }
 
 void free_resources(void)
 {
   upng_free(png_texture);
-  free(z_buffer);
-  z_buffer = NULL;
-  free(color_buffer);
-  color_buffer = NULL;
   array_free(mesh.faces);
   array_free(mesh.vertices);
   array_free(mesh.texcoords);

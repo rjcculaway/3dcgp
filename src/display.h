@@ -16,7 +16,7 @@
  * Contains functions for displaying the window and the color buffer.
  */
 
-typedef enum render_method
+typedef enum RenderMethod
 {
   RENDER_WIREFRAME,
   RENDER_WIREFRAME_DOT,
@@ -24,24 +24,23 @@ typedef enum render_method
   RENDER_TRIANGLE,
   RENDER_TEXTURED_TRIANGLE,
   RENDER_TEXTURED_WIREFRAME_TRIANGLE,
-} render_method;
+} RenderMethod;
 
-typedef enum backface_culling_option
+typedef enum BackfaceCullingOption
 {
   CULLING_NONE,
   CULLING_BACKFACE
-} backface_culling_option;
+} BackfaceCullingOption;
 
 typedef uint32_t color_t;
 
-extern int window_width;
-extern int window_height;
+int get_window_width(void);
+int get_window_height(void);
 
-extern SDL_Window *window;
-extern SDL_Renderer *renderer;
-extern color_t *color_buffer;             // Raw pixel data
-extern float *z_buffer;                   // Z-buffer, actually the "1/w" buffer as the z cannot be linearly interpolated. The larger the z, the farther, so this should start with 1.0 in all values.
-extern SDL_Texture *color_buffer_texture; // Texture to be displayed to the render target
+RenderMethod get_render_method(void);
+BackfaceCullingOption get_backface_culling_option(void);
+void set_render_method(RenderMethod render_method);
+void set_backface_culling_option(BackfaceCullingOption backface_culling_option);
 
 size_t get_pixel(const size_t i, const size_t j);
 bool initialize_window(void);
@@ -58,4 +57,6 @@ void draw_grid(void);
 void draw_line(int x0, int y0, int x1, int y1, color_t color);
 void draw_triangle(int x0, int y0, int x1, int y1, int x2, int y2, color_t color);
 
+float get_z_buffer_at(int x, int y);
+void update_z_buffer_at(int x, int y, float value);
 #endif

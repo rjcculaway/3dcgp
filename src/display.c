@@ -1,13 +1,46 @@
 #include "display.h"
 
-int window_width = 800;
-int window_height = 600;
+static RenderMethod current_render_method = RENDER_TEXTURED_TRIANGLE;
+static BackfaceCullingOption current_backface_culling_option = CULLING_BACKFACE;
 
-SDL_Window *window = NULL;
-SDL_Renderer *renderer = NULL;
-color_t *color_buffer = NULL; // Raw pixel data
-float *z_buffer = NULL;
-SDL_Texture *color_buffer_texture = NULL; // Texture to be displayed to the render target
+static SDL_Renderer *renderer = NULL;
+static SDL_Window *window = NULL;
+
+static int window_width = 800;
+static int window_height = 600;
+
+static color_t *color_buffer = NULL;             // Raw pixel data
+static float *z_buffer = NULL;                   // Depth buffer
+static SDL_Texture *color_buffer_texture = NULL; // Texture to be displayed to the render target
+
+int get_window_width(void)
+{
+  return window_width;
+}
+
+int get_window_height(void)
+{
+  return window_height;
+}
+
+RenderMethod get_render_method(void)
+{
+  return current_render_method;
+}
+BackfaceCullingOption get_backface_culling_option(void)
+{
+  return current_backface_culling_option;
+}
+
+void set_render_method(RenderMethod render_method)
+{
+  current_render_method = render_method;
+}
+
+void set_backface_culling_option(BackfaceCullingOption backface_culling_option)
+{
+  current_backface_culling_option = backface_culling_option;
+}
 
 size_t inline get_pixel(const size_t i, const size_t j)
 {
@@ -57,10 +90,45 @@ bool initialize_window(void)
 
   // SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 
+  // Allocate memory for the color buffer
+  // This is a contiguous block of memory but we will interpret it as a 2D array
+  color_buffer = (color_t *)malloc(sizeof(color_t) * window_width * window_height);
+
+  if (color_buffer == NULL)
+  {
+    fprintf(stderr, "ERROR: Failed to allocate memory for the color buffer.");
+    return false;
+  }
+
+  // Allocate memory for the z-buffer
+  // Also a contiguous block of memory interpreted as a 2D array
+  z_buffer = (float *)malloc(sizeof(float) * window_width * window_height);
+
+  if (z_buffer == NULL)
+  {
+    fprintf(stderr, "ERROR: Failed to allocate memory for the z-buffer.");
+    return false;
+  }
+
+  // Create the SDL Texture to display the color buffer
+  color_buffer_texture = SDL_CreateTexture(
+      renderer,
+      SDL_PIXELFORMAT_RGBA32,      // Pixel Format
+      SDL_TEXTUREACCESS_STREAMING, // Changes will automatically update the texture
+      window_width,
+      window_height);
+
+  printf("resolution: %d x %d\n", window_width, window_height);
+
   return true;
 }
 void destroy_window(void)
 {
+  free(z_buffer);
+  z_buffer = NULL;
+
+  free(color_buffer);
+  color_buffer = NULL;
 
   SDL_DestroyRenderer(renderer);
   renderer = NULL;
@@ -79,10 +147,11 @@ void render_color_buffer(void)
       color_buffer,
       (int)(window_width * sizeof(color_t)));
   SDL_RenderCopy(renderer, color_buffer_texture, NULL, NULL);
+  SDL_RenderPresent(renderer);
 }
 /**
  * Fills the buffer with a color.
- * @param color The color (in RGBA8888 format) to fill the color buffer with.
+ * @param color The color (in RGBA32 format) to fill the color buffer with.
  */
 void clear_color_buffer(color_t color)
 {
@@ -101,16 +170,34 @@ void clear_z_buffer(void)
   // memset() isn't possible here since floats are multibyte types.
 }
 
+float get_z_buffer_at(int x, int y)
+{
+  if (!is_valid_pixel(x, y))
+  {
+    return 1.0;
+  }
+  return z_buffer[get_pixel(x, y)];
+}
+void update_z_buffer_at(int x, int y, float value)
+{
+  if (!is_valid_pixel(x, y))
+  {
+    return;
+  }
+  z_buffer[get_pixel(x, y)] = value;
+}
+
 bool inline is_valid_pixel(int x, int y)
 {
   return x < window_width && y < window_height && x >= 0 && y >= 0;
 }
 void draw_pixel(int x, int y, color_t color)
 {
-  if (is_valid_pixel(x, y))
+  if (!is_valid_pixel(x, y))
   {
-    color_buffer[get_pixel(x, y)] = color;
+    return;
   }
+  color_buffer[get_pixel(x, y)] = color;
 }
 void draw_rect(int x, int y, int width, int height, color_t color)
 {

@@ -132,10 +132,10 @@ void draw_triangle_pixel(int xi, int yi,
   // Using the inverse w as is is incorrect, as nearer objects get lesser inverse w values than farther ones.
   // As such, we need to subtract the inverse w from 1.0.
   float transformed_inverse_w = 1.0 - inverse_w;
-  if (transformed_inverse_w < z_buffer[(window_width * yi) + xi]) // Draw only if the current depth is less than what is in the z-buffer
+  if (transformed_inverse_w < get_z_buffer_at(xi, yi)) // Draw only if the current depth is less than what is in the z-buffer
   {
     draw_pixel(xi, yi, color);
-    z_buffer[(window_width * yi) + xi] = transformed_inverse_w;
+    update_z_buffer_at(xi, yi, transformed_inverse_w);
   }
 }
 
@@ -167,10 +167,10 @@ void draw_texel(int xi, int yi,
   // Using the inverse w as is is incorrect, as nearer objects get lesser inverse w values than farther ones.
   // As such, we need to subtract the inverse w from 1.0.
   float transformed_inverse_w = 1.0 - inverse_w;
-  if (transformed_inverse_w < z_buffer[(window_width * yi) + xi]) // Draw only if the current depth is less than what is in the z-buffer
+  if (transformed_inverse_w < get_z_buffer_at(xi, yi)) // Draw only if the current depth is less than what is in the z-buffer
   {
     draw_pixel(xi, yi, texture[texture_width * texture_y + texture_x]);
-    z_buffer[(window_width * yi) + xi] = transformed_inverse_w;
+    update_z_buffer_at(xi, yi, transformed_inverse_w);
   }
 }
 
