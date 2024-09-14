@@ -48,10 +48,10 @@ bool setup(void)
   initialize_frustum_planes(fovx, fovy, z_near, z_far);
 
   // Load texture data from .png file
-  load_png_texture_data("./assets/crab.png");
+  load_png_texture_data("./assets/f22.png");
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/crab.obj");
+  load_mesh_from_file("./assets/f22.obj");
 
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
@@ -78,24 +78,34 @@ void process_input(void)
         is_running = false;
         break;
       case SDLK_w: // Move forward
-        camera.forward_velocity = vec3_mul(camera.direction, 5.0 * delta_time);
-        camera.position = vec3_add(camera.position, camera.forward_velocity);
+        move_camera_z(10.0 * delta_time);
         break;
       case SDLK_s: // Move backwards
-        camera.forward_velocity = vec3_mul(camera.direction, 5.0 * delta_time);
-        camera.position = vec3_sub(camera.position, camera.forward_velocity);
+        move_camera_z(-10.0 * delta_time);
         break;
-      case SDLK_a: // Rotate left
-        camera.yaw -= 1.0 * delta_time;
+      case SDLK_a: // Move left
+        move_camera_x(-10.0 * delta_time);
         break;
-      case SDLK_d: // Rotate right
-        camera.yaw += 1.0 * delta_time;
+      case SDLK_d: // Move right
+        move_camera_x(10.0 * delta_time);
         break;
-      case SDLK_UP: // Move up
-        camera.position.y += 3.0 * delta_time;
+      case SDLK_q:
+        move_camera_y(10.0 * delta_time);
         break;
-      case SDLK_DOWN: // Move down
-        camera.position.y -= 3.0 * delta_time;
+      case SDLK_e:
+        move_camera_y(-10.0 * delta_time);
+        break;
+      case SDLK_UP: // Rotate up
+        rotate_camera_pitch(-5.0 * delta_time);
+        break;
+      case SDLK_DOWN: // Rotate down
+        rotate_camera_pitch(5.0 * delta_time);
+        break;
+      case SDLK_LEFT: // Rotate left
+        rotate_camera_yaw(-5.0 * delta_time);
+        break;
+      case SDLK_RIGHT: // Rotate right
+        rotate_camera_yaw(5.0 * delta_time);
         break;
       case SDLK_1:
         set_render_method(RENDER_WIREFRAME_DOT);
@@ -177,13 +187,15 @@ void update(void)
 
   // Create a view matrix to transform the coordinate system to the camera's
   vec3_t target = {0, 0, 1};
-  mat4_t camera_rotation_m = mat4_make_rotation_y(camera.yaw);
-  camera.direction = vec3_from_vec4(mat4_matmul_vec(camera_rotation_m, vec4_from_vec3(target)));
+  mat4_t camera_rotation_m = mat4_matmul_mat4(
+      mat4_make_rotation_x(get_camera_pitch()),
+      mat4_make_rotation_y(get_camera_yaw()));
+  set_camera_direction(vec3_from_vec4(mat4_matmul_vec(camera_rotation_m, vec4_from_vec3(target))));
 
   // Offset the target
-  target = vec3_add(camera.position, camera.direction);
+  target = get_camera_target();
 
-  view_matrix = mat4_look_at(camera.position, target, CAMERA_UP);
+  view_matrix = mat4_look_at(get_camera_position(), target, CAMERA_UP);
 
   // Multiply the world matrix by the view matrix to combine the transformations
   mat4_t view_world_matrix = mat4_matmul_mat4(view_matrix, world_matrix);
