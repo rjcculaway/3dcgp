@@ -48,10 +48,10 @@ bool setup(void)
   initialize_frustum_planes(fovx, fovy, z_near, z_far);
 
   // Load texture data from .png file
-  load_png_texture_data("./assets/cube.png");
+  load_png_texture_data("./assets/crab.png");
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/cube.obj");
+  load_mesh_from_file("./assets/crab.obj");
 
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 

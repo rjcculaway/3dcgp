@@ -6,8 +6,8 @@ static BackfaceCullingOption current_backface_culling_option = CULLING_BACKFACE;
 static SDL_Renderer *renderer = NULL;
 static SDL_Window *window = NULL;
 
-static int window_width = 800;
-static int window_height = 600;
+static int window_width = 320;
+static int window_height = 200;
 
 static color_t *color_buffer = NULL;             // Raw pixel data
 static float *z_buffer = NULL;                   // Depth buffer
@@ -58,19 +58,20 @@ bool initialize_window(void)
   SDL_DisplayMode display_mode;
   SDL_GetCurrentDisplayMode(0, &display_mode);
 
-  window_width = display_mode.w;
-  window_height = display_mode.h;
-  // window_width = 800;
-  // window_height = 600;
+  int full_screen_window_width = display_mode.w;
+  int full_screen_window_height = display_mode.h;
 
   // Create an SDL Window
   window = SDL_CreateWindow(
-      NULL,                   // window title
-      SDL_WINDOWPOS_CENTERED, // pos x
-      SDL_WINDOWPOS_CENTERED, // pos y
-      window_width,           // width
-      window_height,          // height
+      NULL,                      // window title
+      SDL_WINDOWPOS_CENTERED,    // pos x
+      SDL_WINDOWPOS_CENTERED,    // pos y
+      full_screen_window_width,  // width
+      full_screen_window_height, // height
       SDL_WINDOW_BORDERLESS);
+
+  window_width = full_screen_window_width / 3;
+  window_height = full_screen_window_height / 3;
   if (!window)
   {
     fprintf(stderr, "ERROR: Failed reating SDL window.\n");
