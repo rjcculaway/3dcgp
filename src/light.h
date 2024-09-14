@@ -16,7 +16,8 @@ typedef struct sun_light
   vec3_t direction;
 } sun_light_t;
 
-extern sun_light_t sunlight;
+void initialize_light(vec3_t direction);
+sun_light_t get_sun_light();
 
 color_t light_apply_intensity(color_t original_color, float intensity);
 float light_lambertian(vec3_t face_normal, vec3_t light_direction);

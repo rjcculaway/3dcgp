@@ -55,6 +55,8 @@ bool setup(void)
 
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
+  // Initialize lights
+  initialize_light(vec3_create(0, 0, 1));
   return true;
 }
 
@@ -299,7 +301,7 @@ void update(void)
         projected_points[j].y += (get_window_height() / 2.0);
       }
 
-      float light_intensity = light_lambertian(normal, sunlight.direction);
+      float light_intensity = light_lambertian(normal, get_sun_light().direction);
       color_t final_color = light_apply_intensity(face.color, light_intensity);
 
       triangle_t projected_triangle = {
