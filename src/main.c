@@ -48,10 +48,10 @@ bool setup(void)
   initialize_frustum_planes(fovx, fovy, z_near, z_far);
 
   // Load texture data from .png file
-  load_png_texture_data("./assets/f22.png");
+  load_png_texture_data("./assets/cube.png");
 
   // Load mesh data from file
-  load_mesh_from_file("./assets/f22.obj");
+  load_mesh_from_file("./assets/cube.obj");
 
   printf("vertices: %d, faces: %d, uvs: %d\n", array_length(mesh.vertices), array_length(mesh.faces), array_length(mesh.texcoords));
 
@@ -223,9 +223,9 @@ void update(void)
 
     // Left-handed coordinate system (+z is away), so the order of the cross product
     // must be b-a x a-b
-    vec3_t normal = vec3_cross(
+    vec3_t normal = vec3_normalize(vec3_cross(
         vec_ab,
-        vec_ac);
+        vec_ac));
     vec3_t origin = {0, 0, 0};
     // There is no need to use the camera position for the camera ray. By the end of view matrix multiplication, the camera WILL be at the origin.
     vec3_t camera_ray = vec3_sub(origin, vec_a); // Vector from camera to point A
