@@ -48,8 +48,9 @@ bool setup(void)
   initialize_frustum_planes(fovx, fovy, z_near, z_far);
 
   // Load mesh and texture data from .png file
-  load_mesh("./assets/f22.obj", "./assets/f22.png", vec3_create(1, 1, 1), vec3_create(0, 0, 0), vec3_create(-3, 0, 0));
-  load_mesh("./assets/efa.obj", "./assets/efa.png", vec3_create(1, 1, 1), vec3_create(0, 0, 0), vec3_create(3, 0, 0));
+  load_mesh("./assets/f22.obj", "./assets/f22.png", vec3_create(1, 1, 1), vec3_create(0, 0, 0), vec3_create(-3, 0, 5));
+  load_mesh("./assets/efa.obj", "./assets/efa.png", vec3_create(1, 1, 1), vec3_create(0, 0, 0), vec3_create(3, 0, 5));
+  load_mesh("./assets/crab.obj", "./assets/crab.png", vec3_create(1, 1, 1), vec3_create(0, 0, 0), vec3_create(0, 0, 5));
 
   mesh_t *meshes = get_meshes();
   size_t mesh_count = get_mesh_count();
@@ -393,7 +394,7 @@ void update(void)
                 {.x = projected_points[2].x, .y = projected_points[2].y, .z = projected_points[2].z, .w = projected_points[2].w}},
             .texcoords = {{clipped_triangle.texcoords[0].u, clipped_triangle.texcoords[0].v}, {clipped_triangle.texcoords[1].u, clipped_triangle.texcoords[1].v}, {clipped_triangle.texcoords[2].u, clipped_triangle.texcoords[2].v}},
             .color = final_color,
-        };
+            .texture = mesh->texture};
         if (num_triangles_to_render < MAX_TRIANGLES_PER_MESH)
         {
           triangles_to_render[num_triangles_to_render++] = projected_triangle;
@@ -461,14 +462,14 @@ void render(void)
           triangle.color);
       break;
     case RENDER_TEXTURED_TRIANGLE:
-      // draw_textured_triangle(
-      //     triangle,
-      //     mesh->texture);
+      draw_textured_triangle(
+          triangle,
+          triangle.texture);
       break;
     case RENDER_TEXTURED_WIREFRAME_TRIANGLE:
-      // draw_textured_triangle(
-      //     triangle,
-      //     mesh->texture);
+      draw_textured_triangle(
+          triangle,
+          triangle.texture);
       draw_triangle(
           x0, y0,
           x1, y1,

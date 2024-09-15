@@ -4,7 +4,8 @@
     "camera.h": "c",
     "vector.h": "c",
     "stdbool.h": "c",
-    "string.h": "c"
+    "string.h": "c",
+    "texture.h": "c"
   },
   "makefile.configureOnOpen": false
 }

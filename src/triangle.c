@@ -142,10 +142,15 @@ void draw_triangle_pixel(int xi, int yi,
 void draw_texel(int xi, int yi,
                 vec4_t point_a, vec4_t point_b, vec4_t point_c,
                 float inv_w_a, float inv_w_b, float inv_w_c,
-                tex2_t uv_a, tex2_t uv_b, tex2_t uv_c, color_t *texture)
+                tex2_t uv_a, tex2_t uv_b, tex2_t uv_c, upng_t *texture)
 {
   vec2_t p = {.x = xi, .y = yi};
   vec3_t weights = barycentric_weights(vec4_xy(point_a), vec4_xy(point_b), vec4_xy(point_c), p);
+
+  // Query texture information
+  int texture_width = upng_get_width(texture);
+  int texture_height = upng_get_height(texture);
+  color_t *texture_buffer = (color_t *)upng_get_buffer(texture);
 
   float alpha = weights.x;
   float beta = weights.y;
@@ -159,7 +164,7 @@ void draw_texel(int xi, int yi,
   // Divide by the interpolated inverse of w to remove the initial division by w.
   u /= inverse_w;
   v /= inverse_w;
-  /*
+
   // Map the UV coordinate to actual texture dimensions, wrapping and clamping to avoid overflow
   int texture_x = clamp(0, texture_width, abs((int)(texture_width * u)) % texture_width);
   int texture_y = clamp(0, texture_height, abs((int)(texture_height * v)) % texture_height);
@@ -169,10 +174,9 @@ void draw_texel(int xi, int yi,
   float transformed_inverse_w = 1.0 - inverse_w;
   if (transformed_inverse_w < get_z_buffer_at(xi, yi)) // Draw only if the current depth is less than what is in the z-buffer
   {
-    draw_pixel(xi, yi, texture[texture_width * texture_y + texture_x]);
+    draw_pixel(xi, yi, texture_buffer[texture_width * texture_y + texture_x]);
     update_z_buffer_at(xi, yi, transformed_inverse_w);
   }
-  */
 }
 
 void sort_three_vertices_uv_by_y(triangle_t *triangle) // Insertion Sort, sorts in place
@@ -196,7 +200,7 @@ void sort_three_vertices_uv_by_y(triangle_t *triangle) // Insertion Sort, sorts 
 
 void draw_textured_triangle(
     triangle_t triangle,
-    color_t *texture)
+    upng_t *texture)
 {
   // Sort the vertices
   sort_three_vertices_uv_by_y(&triangle);

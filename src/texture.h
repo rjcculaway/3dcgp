@@ -2,7 +2,6 @@
 #define TEXTURE_RENENGINE_SFW
 
 #include <stdint.h>
-#include "../upng/upng.h"
 
 typedef struct tex2
 {
