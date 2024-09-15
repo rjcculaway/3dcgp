@@ -159,7 +159,7 @@ void draw_texel(int xi, int yi,
   // Divide by the interpolated inverse of w to remove the initial division by w.
   u /= inverse_w;
   v /= inverse_w;
-
+  /*
   // Map the UV coordinate to actual texture dimensions, wrapping and clamping to avoid overflow
   int texture_x = clamp(0, texture_width, abs((int)(texture_width * u)) % texture_width);
   int texture_y = clamp(0, texture_height, abs((int)(texture_height * v)) % texture_height);
@@ -172,6 +172,7 @@ void draw_texel(int xi, int yi,
     draw_pixel(xi, yi, texture[texture_width * texture_y + texture_x]);
     update_z_buffer_at(xi, yi, transformed_inverse_w);
   }
+  */
 }
 
 void sort_three_vertices_uv_by_y(triangle_t *triangle) // Insertion Sort, sorts in place
