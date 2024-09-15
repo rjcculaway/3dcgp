@@ -55,4 +55,6 @@ void draw_textured_triangle(
 
 vec3_t barycentric_weights(vec2_t a, vec2_t b, vec2_t c, vec2_t p);
 
+vec3_t compute_triangle_normal(vec4_t points[3]);
+
 #endif

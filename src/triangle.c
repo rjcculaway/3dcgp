@@ -314,3 +314,23 @@ vec3_t barycentric_weights(vec2_t a, vec2_t b, vec2_t c, vec2_t p)
       alpha, beta, gamma};
   return barycentric_coordinates;
 }
+
+vec3_t compute_triangle_normal(vec4_t points[3])
+{
+  // Backface Culling
+  /*   A   */
+  /*  / \  */
+  /* B---C */
+  vec3_t vec_a = vec3_from_vec4(points[0]);
+  vec3_t vec_b = vec3_from_vec4(points[1]);
+  vec3_t vec_c = vec3_from_vec4(points[2]);
+  vec3_t vec_ab = vec3_normalize(vec3_sub(vec_b, vec_a)); // B - A
+  vec3_t vec_ac = vec3_normalize(vec3_sub(vec_c, vec_a)); // C - A
+
+  // Left-handed coordinate system (+z is away), so the order of the cross product
+  // must be b-a x a-b
+  vec3_t normal = vec3_normalize(vec3_cross(
+      vec_ab,
+      vec_ac));
+  return normal;
+}

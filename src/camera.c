@@ -1,7 +1,7 @@
 #include "camera.h"
 
 static camera_t camera = {
-    .position = {0, 0, 0},
+    .position = {0, 2, 0},
     .direction = {0, 0, 1},
     .forward_velocity = {0, 0, 0},
     .pitch = 0.0f,
