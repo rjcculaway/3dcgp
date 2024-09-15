@@ -54,17 +54,17 @@ void set_camera_pitch(float pitch)
 
 void change_camera_forward_velocity_to_z(float factor)
 {
-    camera.forward_velocity = vec3_mul(camera.direction, factor);
+    camera.forward_velocity = vec3_mul(vec3_normalize(vec3_add(camera.forward_velocity, camera.direction)), factor);
 }
 
 void change_camera_forward_velocity_to_y(float factor)
 {
-    camera.forward_velocity = vec3_mul(CAMERA_UP, factor);
+    camera.forward_velocity = vec3_mul(vec3_normalize(vec3_add(camera.forward_velocity, CAMERA_UP)), factor);
 }
 
 void change_camera_forward_velocity_to_x(float factor)
 {
-    camera.forward_velocity = vec3_mul(vec3_cross(CAMERA_UP, camera.direction), factor);
+    camera.forward_velocity = vec3_mul(vec3_normalize(vec3_add(camera.forward_velocity, vec3_cross(CAMERA_UP, camera.direction))), factor);
 }
 
 void move_camera_by_forward_velocity(void)

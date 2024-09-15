@@ -72,67 +72,105 @@ void process_input(void)
       is_running = false;
       break;
     case SDL_KEYDOWN:
-      switch (event.key.keysym.sym)
+    {
+      SDL_Keycode keycode = event.key.keysym.sym;
+      if (keycode == SDLK_ESCAPE)
       {
-      case SDLK_ESCAPE:
         is_running = false;
         break;
-      case SDLK_w: // Move forward
+      }
+      if (keycode == SDLK_w)
+      { // Move forward
         change_camera_forward_velocity_to_z(10.0 * delta_time);
         break;
-      case SDLK_s: // Move backwards
+      }
+      if (keycode == SDLK_s)
+      { // Move backwards
         change_camera_forward_velocity_to_z(-10.0 * delta_time);
         break;
-      case SDLK_a: // Move left
+      }
+      if (keycode == SDLK_a)
+      { // Move left
         change_camera_forward_velocity_to_x(-10.0 * delta_time);
         break;
-      case SDLK_d: // Move right
+      }
+      if (keycode == SDLK_d)
+      { // Move right
         change_camera_forward_velocity_to_x(10.0 * delta_time);
         break;
-      case SDLK_q:
+      }
+      if (keycode == SDLK_q)
+      {
         change_camera_forward_velocity_to_y(10.0 * delta_time);
         break;
-      case SDLK_e:
+      }
+      if (keycode == SDLK_e)
+      {
         change_camera_forward_velocity_to_y(-10.0 * delta_time);
         break;
-      case SDLK_UP: // Rotate up
+      }
+      if (keycode == SDLK_UP)
+      { // Rotate up
         rotate_camera_pitch(-5.0 * delta_time);
         break;
-      case SDLK_DOWN: // Rotate down
+      }
+      if (keycode == SDLK_DOWN)
+      { // Rotate down
         rotate_camera_pitch(5.0 * delta_time);
         break;
-      case SDLK_LEFT: // Rotate left
+      }
+      if (keycode == SDLK_LEFT)
+      { // Rotate left
         rotate_camera_yaw(-5.0 * delta_time);
         break;
-      case SDLK_RIGHT: // Rotate right
+      }
+      if (keycode == SDLK_RIGHT)
+      { // Rotate right
         rotate_camera_yaw(5.0 * delta_time);
         break;
-      case SDLK_1:
+      }
+      if (keycode == SDLK_1)
+      {
         set_render_method(RENDER_WIREFRAME_DOT);
         break;
-      case SDLK_2:
+      }
+      if (keycode == SDLK_2)
+      {
         set_render_method(RENDER_WIREFRAME);
         break;
-      case SDLK_3:
+      }
+      if (keycode == SDLK_3)
+      {
         set_render_method(RENDER_TRIANGLE);
         break;
-      case SDLK_4:
+      }
+      if (keycode == SDLK_4)
+      {
         set_render_method(RENDER_WIREFRAME_TRIANGLE);
         break;
-      case SDLK_5:
+      }
+      if (keycode == SDLK_5)
+      {
         set_render_method(RENDER_TEXTURED_TRIANGLE);
         break;
-      case SDLK_6:
+      }
+      if (keycode == SDLK_6)
+      {
         set_render_method(RENDER_TEXTURED_WIREFRAME_TRIANGLE);
         break;
-      case SDLK_c:
+      }
+      if (keycode == SDLK_c)
+      {
         set_backface_culling_option(CULLING_BACKFACE);
         break;
-      case SDLK_x:
+      }
+      if (keycode == SDLK_x)
+      {
         set_backface_culling_option(CULLING_NONE);
         break;
       }
-      break;
+    }
+    break;
     case SDL_KEYUP:
       switch (event.key.keysym.sym)
       {
