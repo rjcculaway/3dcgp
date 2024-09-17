@@ -2,8 +2,16 @@
 #include "display.h"
 #include "texture.h"
 
+float edge_cross(vec2_t a, vec2_t b, vec2_t p)
+{
+  vec2_t ab = vec2_sub(b, a);
+  vec2_t ap = vec2_sub(p, a);
+
+  return vec2_cross(ab, ap);
+}
+
 // Draw a filled triangle with a flat bottom
-void fill_flat_bottom_triangle(triangle_t triangle, color_t color)
+void fill_flat_bottom_triangle_scanline(triangle_t triangle, color_t color)
 {
   int x0 = triangle.points[0].x;
   int y0 = triangle.points[0].y;
@@ -12,8 +20,15 @@ void fill_flat_bottom_triangle(triangle_t triangle, color_t color)
   int x2 = triangle.points[2].x;
   int y2 = triangle.points[2].y;
 
+  vec2_t v0_xy = vec4_xy(triangle.points[0]);
+  vec2_t v1_xy = vec4_xy(triangle.points[1]);
+  vec2_t v2_xy = vec4_xy(triangle.points[2]);
+
   float inv_slope1 = y1 != y0 ? ((float)(x1 - x0)) / abs((int)y1 - (int)y0) : 0; // Inverse slope (run over rise), because in this case y is the independent value
   float inv_slope2 = y2 != y0 ? ((float)(x2 - x0)) / abs((int)y2 - (int)y0) : 0;
+
+  // Area of the parallelogram to compute factors for barycentric coordinates
+  float area_parallelogram = edge_cross(v0_xy, v1_xy, v2_xy);
 
   // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
   // Get the reciprocal all of the ws of the points
@@ -36,8 +51,18 @@ void fill_flat_bottom_triangle(triangle_t triangle, color_t color)
       }
       for (int xi = x_start; xi < x_end; xi++)
       {
+        vec2_t p = vec2_create(xi, yi);
+        vec3_t barycentric_unnormalized = compute_barycentric_unnormalized(v0_xy, v1_xy, v2_xy, p);
+        float w0 = barycentric_unnormalized.x;
+        float w1 = barycentric_unnormalized.y;
+
+        // Barycentric interpolation weights
+        float alpha = w0 / area_parallelogram;
+        float beta = w1 / area_parallelogram;
+        float gamma = 1.0 - alpha - beta;
+
         // We cannot use draw_line here as we need to sample the color of the texture
-        draw_triangle_pixel(xi, yi, triangle.points[0], triangle.points[1], triangle.points[2], inv_w_a, inv_w_b, inv_w_c, color);
+        draw_triangle_pixel(xi, yi, alpha, beta, gamma, inv_w_a, inv_w_b, inv_w_c, color);
       }
     }
   }
@@ -56,7 +81,7 @@ void fill_flat_bottom_triangle(triangle_t triangle, color_t color)
 //           \/                                         //
 //        (x2,y2)                                       //
 //------------------------------------------------------//
-void fill_flat_top_triangle(triangle_t triangle, color_t color)
+void fill_flat_top_triangle_scanline(triangle_t triangle, color_t color)
 {
   int x0 = triangle.points[0].x;
   int y0 = triangle.points[0].y;
@@ -68,12 +93,19 @@ void fill_flat_top_triangle(triangle_t triangle, color_t color)
   float inv_slope1 = y2 != y1 ? ((float)(x2 - x1)) / abs(y2 - y1) : 0; // Inverse slope (run over rise), because in this case y is the independent value
   float inv_slope2 = y2 != y0 ? ((float)(x2 - x0)) / abs(y2 - y0) : 0;
 
+  vec2_t v0_xy = vec4_xy(triangle.points[0]);
+  vec2_t v1_xy = vec4_xy(triangle.points[1]);
+  vec2_t v2_xy = vec4_xy(triangle.points[2]);
+
   // We cannot linearly interpolate w, so we interpolate the reciprocal of w instead which is linear.
   // Get the reciprocal all of the ws of the points
   // w is initially the z component
   float inv_w_a = 1 / triangle.points[0].w;
   float inv_w_b = 1 / triangle.points[1].w;
   float inv_w_c = 1 / triangle.points[2].w;
+
+  // Area of the parallelogram to compute factors for barycentric coordinates
+  float area_parallelogram = edge_cross(v0_xy, v1_xy, v2_xy);
 
   for (int yi = y1; yi <= y2; yi++)
   {
@@ -87,8 +119,18 @@ void fill_flat_top_triangle(triangle_t triangle, color_t color)
     }
     for (int xi = x_start; xi < x_end; xi++)
     {
+      vec2_t p = vec2_create(xi, yi);
+      vec3_t barycentric_unnormalized = compute_barycentric_unnormalized(v0_xy, v1_xy, v2_xy, p);
+      float w0 = barycentric_unnormalized.x;
+      float w1 = barycentric_unnormalized.y;
+
+      // Barycentric interpolation weights
+      float alpha = w0 / area_parallelogram;
+      float beta = w1 / area_parallelogram;
+      float gamma = 1.0 - alpha - beta;
+
       // We cannot use draw_line here as we need to sample the color of the texture
-      draw_triangle_pixel(xi, yi, triangle.points[0], triangle.points[1], triangle.points[2], inv_w_a, inv_w_b, inv_w_c, color);
+      draw_triangle_pixel(xi, yi, alpha, beta, gamma, inv_w_a, inv_w_b, inv_w_c, color);
     }
     x_start -= inv_slope1;
     x_end -= inv_slope2;
@@ -103,10 +145,18 @@ void draw_filled_triangle(triangle_t triangle, color_t color)
   vec4_t v0 = triangle.points[0];
   vec4_t v1 = triangle.points[1];
   vec4_t v2 = triangle.points[2];
+
   vec2_t v0_xy = vec4_xy(v0);
   vec2_t v1_xy = vec4_xy(v1);
   vec2_t v2_xy = vec4_xy(v2);
-  // Used for barycentric interpolation
+
+  // Used to compute barycentric coordinates
+  float area_parallelogram = edge_cross(
+      v0_xy,
+      v1_xy,
+      v2_xy);
+
+  // Used for perspective-correct barycentric interpolation
   float inv_w_v0 = 1.0 / v0.w;
   float inv_w_v1 = 1.0 / v1.w;
   float inv_w_v2 = 1.0 / v2.w;
@@ -127,10 +177,31 @@ void draw_filled_triangle(triangle_t triangle, color_t color)
     for (int xi = x_min; xi <= x_max; xi++)
     {
       vec2_t p = {xi, yi};
-      if (is_point_inside_triangle(v0_xy, v1_xy, v2_xy, p, bias0, bias1, bias2))
+
+      /**
+       *  The point p is inside the triangle if it is to the right of all three edges of the triangle.
+       *  Hello, cross product! We can use the cross product's sign to determine if an edge is in correct direction.
+       *  We can't use the cross product in 2D, but we "cheat" by using the z-axis as the result.
+       *
+       *  "Cross products", or 'edge functions' according to Juan Pineda.
+       *  These are actually the barycentric coordinates of the triangle, but not divided by the area of the parallelogram formed by the triangle.
+       *  Adding a bias essentially "shrinks" the non-top-left edges of the triangle.
+       */
+
+      vec3_t barycentric_unnormalized = compute_barycentric_unnormalized(v0_xy, v1_xy, v2_xy, p);
+
+      float w0 = barycentric_unnormalized.x;
+      float w1 = barycentric_unnormalized.y;
+      float w2 = barycentric_unnormalized.z;
+
+      float alpha = w0 / area_parallelogram;
+      float beta = w1 / area_parallelogram;
+      float gamma = 1.0 - alpha - beta;
+
+      if (is_point_inside_triangle(w0, w1, w2, bias0, bias1, bias2))
       {
         draw_triangle_pixel(xi, yi,
-                            v0, v1, v2,
+                            alpha, beta, gamma,
                             inv_w_v0, inv_w_v1, inv_w_v2,
                             color);
       }
@@ -150,27 +221,9 @@ bool is_top_left(vec2_t *start, vec2_t *end)
   return is_top_edge || is_left_edge;
 }
 
-int edge_function(vec2_t a, vec2_t b, vec2_t p)
+bool is_point_inside_triangle(int w0, int w1, int w2, int bias0, int bias1, int bias2)
 {
-  vec2_t ab = vec2_sub(b, a);
-  vec2_t ap = vec2_sub(p, a);
-
-  return vec2_cross(ab, ap);
-}
-
-bool is_point_inside_triangle(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t point, int bias0, int bias1, int bias2)
-{
-  // The point p is inside the triangle if it is to the right of all three edges of the triangle.
-  // Hello, cross product! We can use the cross product's sign to determine if an edge is in correct direction.
-  // We can't use the cross product in 2D, but we "cheat" by using the z-axis as the result.
-
-  // "Cross products", or 'edge functions' according to Juan Pineda.
-  // Adding a bias essentially "shrinks" the non-top-left edges of the triangle.
-  int w0 = edge_function(v1, v2, point) + bias0;
-  int w1 = edge_function(v0, v1, point) + bias1;
-  int w2 = edge_function(v2, v0, point) + bias2;
-
-  if (w0 < 0 || w1 < 0 || w2 < 0)
+  if (w0 + bias0 < 0 || w1 + bias1 < 0 || w2 + bias2 < 0)
   {
     return false;
   }
@@ -189,27 +242,20 @@ void draw_filled_triangle_scanline(triangle_t triangle, color_t color)
   // If one of the y values are equal, then that means that the triangle does not need to be divided into two!
   if (y0 != y1)
   {
-    fill_flat_bottom_triangle(triangle, color);
+    fill_flat_bottom_triangle_scanline(triangle, color);
   }
   if (y1 != y2)
   {
-    fill_flat_top_triangle(triangle, color);
+    fill_flat_top_triangle_scanline(triangle, color);
   }
   return;
 }
 
 void draw_triangle_pixel(int xi, int yi,
-                         vec4_t point_a, vec4_t point_b, vec4_t point_c,
+                         float alpha, float beta, float gamma,
                          float inv_w_a, float inv_w_b, float inv_w_c,
                          color_t color)
 {
-  vec2_t p = {.x = xi, .y = yi};
-  vec3_t weights = barycentric_weights(vec4_xy(point_a), vec4_xy(point_b), vec4_xy(point_c), p);
-
-  float alpha = weights.x;
-  float beta = weights.y;
-  float gamma = weights.z;
-
   // Interpolate using barycentric coordinates, multiplying by 1 / w of the point for correct perspective texture mapping (instead of affine texture mapping)
   float inverse_w = inv_w_a * alpha + inv_w_b * beta + inv_w_c * gamma;
 
@@ -224,21 +270,14 @@ void draw_triangle_pixel(int xi, int yi,
 }
 
 void draw_texel(int xi, int yi,
-                vec4_t point_a, vec4_t point_b, vec4_t point_c,
+                float alpha, float beta, float gamma,
                 float inv_w_a, float inv_w_b, float inv_w_c,
                 tex2_t uv_a, tex2_t uv_b, tex2_t uv_c, upng_t *texture)
 {
-  vec2_t p = {.x = xi, .y = yi};
-  vec3_t weights = barycentric_weights(vec4_xy(point_a), vec4_xy(point_b), vec4_xy(point_c), p);
-
   // Query texture information
   int texture_width = upng_get_width(texture);
   int texture_height = upng_get_height(texture);
   color_t *texture_buffer = (color_t *)upng_get_buffer(texture);
-
-  float alpha = weights.x;
-  float beta = weights.y;
-  float gamma = weights.z;
 
   // Interpolate using barycentric coordinates, multiplying by 1 / w of the point for correct perspective texture mapping (instead of affine texture mapping)
   float u = uv_a.u * inv_w_a * alpha + uv_b.u * inv_w_b * beta + uv_c.u * inv_w_c * gamma;
@@ -298,10 +337,13 @@ void draw_textured_triangle_scanline(
 
   // Unpack values
   vec4_t point_a = triangle.points[0];
+  vec2_t v0_xy = vec4_xy(triangle.points[0]);
   tex2_t uv_a = triangle.texcoords[0];
   vec4_t point_b = triangle.points[1];
+  vec2_t v1_xy = vec4_xy(triangle.points[1]);
   tex2_t uv_b = triangle.texcoords[1];
   vec4_t point_c = triangle.points[2];
+  vec2_t v2_xy = vec4_xy(triangle.points[2]);
   tex2_t uv_c = triangle.texcoords[2];
 
   int x0 = point_a.x;
@@ -324,6 +366,8 @@ void draw_textured_triangle_scanline(
   float inv_w_b = 1 / point_b.w;
   float inv_w_c = 1 / point_c.w;
 
+  float area_parallelogram = edge_cross(v0_xy, v1_xy, v2_xy);
+
   if (y2 != y1)
   {
     for (int yi = y1; yi <= y2; yi++)
@@ -338,8 +382,18 @@ void draw_textured_triangle_scanline(
       }
       for (int xi = x_start; xi < x_end; xi++)
       {
+        vec2_t p = vec2_create(xi, yi);
+        vec3_t barycentric_unnormalized = compute_barycentric_unnormalized(v0_xy, v1_xy, v2_xy, p);
+
+        float w0 = barycentric_unnormalized.x;
+        float w1 = barycentric_unnormalized.y;
+
+        float alpha = w0 / area_parallelogram;
+        float beta = w1 / area_parallelogram;
+        float gamma = 1.0 - alpha - beta;
+
         // We cannot use draw_line here as we need to sample the color of the texture
-        draw_texel(xi, yi, point_a, point_b, point_c,
+        draw_texel(xi, yi, alpha, beta, gamma,
                    inv_w_a, inv_w_b, inv_w_c,
                    uv_a, uv_b, uv_c, texture);
       }
@@ -366,8 +420,16 @@ void draw_textured_triangle_scanline(
       }
       for (int xi = x_start; xi < x_end; xi++)
       {
+        vec2_t p = vec2_create(xi, yi);
+        float w0 = edge_cross(v1_xy, v2_xy, p);
+        float w1 = edge_cross(v2_xy, v0_xy, p);
+
+        float alpha = w0 / area_parallelogram;
+        float beta = w1 / area_parallelogram;
+        float gamma = 1.0 - alpha - beta;
+
         // We cannot use draw_line here as we need to sample the color of the texture
-        draw_texel(xi, yi, point_a, point_b, point_c,
+        draw_texel(xi, yi, alpha, beta, gamma,
                    inv_w_a, inv_w_b, inv_w_c,
                    uv_a, uv_b, uv_c, texture);
       }
@@ -375,28 +437,6 @@ void draw_textured_triangle_scanline(
   }
 
   return;
-}
-
-// Barycentric Coordinates
-vec3_t barycentric_weights(vec2_t a, vec2_t b, vec2_t c, vec2_t p)
-{
-  vec2_t ac = vec2_sub(c, a);
-  vec2_t ab = vec2_sub(b, a);
-  vec2_t ap = vec2_sub(p, a);
-  vec2_t pc = vec2_sub(c, p);
-  vec2_t pb = vec2_sub(b, p);
-
-  // Area of the parallelogram formed by the entire triangle
-  // What we are actually computing here is the z component for what is supposed to be the cross product
-  float area_parallelogram_abc = (ac.x * ab.y - ac.y * ab.x); // || AC x AB ||
-
-  float alpha = (pc.x * pb.y - pc.y * pb.x) / area_parallelogram_abc;
-  float beta = (ac.x * ap.y - ac.y * ap.x) / area_parallelogram_abc;
-  float gamma = 1 - alpha - beta;
-
-  vec3_t barycentric_coordinates = {
-      alpha, beta, gamma};
-  return barycentric_coordinates;
 }
 
 vec3_t compute_triangle_normal(vec4_t points[3])
@@ -417,4 +457,12 @@ vec3_t compute_triangle_normal(vec4_t points[3])
       vec_ab,
       vec_ac));
   return normal;
+}
+
+vec3_t compute_barycentric_unnormalized(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t p)
+{
+  return vec3_create(
+      edge_cross(v1, v2, p),
+      edge_cross(v2, v0, p),
+      edge_cross(v0, v1, p));
 }

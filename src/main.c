@@ -461,7 +461,7 @@ void render(void)
       draw_rect(x2 - point_size / 2, y2 - point_size / 2, point_size, point_size, 0xFFFF0000);
       break;
     case RENDER_WIREFRAME_TRIANGLE:
-      draw_filled_triangle_scanline(
+      draw_filled_triangle(
           triangle,
           triangle.color);
       draw_triangle(
