@@ -95,7 +95,91 @@ void fill_flat_top_triangle(triangle_t triangle, color_t color)
   }
 }
 
+// Highly parallelizable triangle rasterization, algorithm from Juan Pineda's 1988 paper
+// https://www.cs.drexel.edu/~deb39/Classes/Papers/comp175-06-pineda.pdf
 void draw_filled_triangle(triangle_t triangle, color_t color)
+{
+  // Vertices
+  vec4_t v0 = triangle.points[0];
+  vec4_t v1 = triangle.points[1];
+  vec4_t v2 = triangle.points[2];
+  vec2_t v0_xy = vec4_xy(v0);
+  vec2_t v1_xy = vec4_xy(v1);
+  vec2_t v2_xy = vec4_xy(v2);
+  // Used for barycentric interpolation
+  float inv_w_v0 = 1.0 / v0.w;
+  float inv_w_v1 = 1.0 / v1.w;
+  float inv_w_v2 = 1.0 / v2.w;
+
+  // Get the bounding box
+  int x_min = fmin(v0.x, fmin(v1.x, v2.x));
+  int x_max = fmax(v0.x, fmax(v1.x, v2.x));
+  int y_min = fmin(v0.y, fmin(v1.y, v2.y));
+  int y_max = fmax(v0.y, fmax(v1.y, v2.y));
+
+  // Bias factors for precedence in rasterization
+  int bias0 = is_top_left(&v1_xy, &v2_xy) ? 0 : -1;
+  int bias1 = is_top_left(&v2_xy, &v0_xy) ? 0 : -1;
+  int bias2 = is_top_left(&v0_xy, &v1_xy) ? 0 : -1;
+
+  for (int yi = y_min; yi <= y_max; yi++)
+  {
+    for (int xi = x_min; xi <= x_max; xi++)
+    {
+      vec2_t p = {xi, yi};
+      if (is_point_inside_triangle(v0_xy, v1_xy, v2_xy, p, bias0, bias1, bias2))
+      {
+        draw_triangle_pixel(xi, yi,
+                            v0, v1, v2,
+                            inv_w_v0, inv_w_v1, inv_w_v2,
+                            color);
+      }
+    }
+  }
+  return;
+}
+
+// Top-left rule for rasterization which determines the precedence of edges and prevents overdraw
+bool is_top_left(vec2_t *start, vec2_t *end)
+{
+  vec2_t edge = vec2_sub(*end, *start);
+
+  bool is_top_edge = edge.y == 0 && edge.x > 0;
+  bool is_left_edge = edge.y < 0; // Since we are using a clockwise orientation, the left edge points up and thus is negative.
+
+  return is_top_edge || is_left_edge;
+}
+
+int edge_function(vec2_t a, vec2_t b, vec2_t p)
+{
+  vec2_t ab = vec2_sub(b, a);
+  vec2_t ap = vec2_sub(p, a);
+
+  return vec2_cross(ab, ap);
+}
+
+bool is_point_inside_triangle(vec2_t v0, vec2_t v1, vec2_t v2, vec2_t point, int bias0, int bias1, int bias2)
+{
+  // The point p is inside the triangle if it is to the right of all three edges of the triangle.
+  // Hello, cross product! We can use the cross product's sign to determine if an edge is in correct direction.
+  // We can't use the cross product in 2D, but we "cheat" by using the z-axis as the result.
+
+  // "Cross products", or 'edge functions' according to Juan Pineda.
+  // Adding a bias essentially "shrinks" the non-top-left edges of the triangle.
+  int w0 = edge_function(v1, v2, point) + bias0;
+  int w1 = edge_function(v0, v1, point) + bias1;
+  int w2 = edge_function(v2, v0, point) + bias2;
+
+  if (w0 < 0 || w1 < 0 || w2 < 0)
+  {
+    return false;
+  }
+
+  return true;
+}
+
+// Draw a filled triangle using scanlines; poorly parallelizable
+void draw_filled_triangle_scanline(triangle_t triangle, color_t color)
 {
   sort_three_vertices_uv_by_y(&triangle);
   int y0 = triangle.points[0].y;
@@ -198,7 +282,7 @@ void sort_three_vertices_uv_by_y(triangle_t *triangle) // Insertion Sort, sorts 
   }
 }
 
-void draw_textured_triangle(
+void draw_textured_triangle_scanline(
     triangle_t triangle,
     upng_t *texture)
 {

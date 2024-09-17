@@ -86,6 +86,11 @@ vec2_t vec2_lerp(vec2_t u, vec2_t v, float t)
   return lerped;
 }
 
+float vec2_cross(vec2_t u, vec2_t v)
+{
+  return u.x * v.y - v.x * u.y; // Determinant!
+}
+
 /**
  * Vector 3D
  */

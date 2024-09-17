@@ -38,6 +38,7 @@ vec2_t vec2_div(vec2_t v, float c);
 float vec2_dot(vec2_t u, vec2_t v);
 vec2_t vec2_normalize(vec2_t v);
 vec2_t vec2_lerp(vec2_t u, vec2_t v, float t);
+float vec2_cross(vec2_t u, vec2_t v); // Fake cross product
 
 // Vector 3D Functions
 vec3_t vec3_create(float x, float y, float z);

@@ -461,7 +461,7 @@ void render(void)
       draw_rect(x2 - point_size / 2, y2 - point_size / 2, point_size, point_size, 0xFFFF0000);
       break;
     case RENDER_WIREFRAME_TRIANGLE:
-      draw_filled_triangle(
+      draw_filled_triangle_scanline(
           triangle,
           triangle.color);
       draw_triangle(
@@ -476,12 +476,12 @@ void render(void)
           triangle.color);
       break;
     case RENDER_TEXTURED_TRIANGLE:
-      draw_textured_triangle(
+      draw_textured_triangle_scanline(
           triangle,
           triangle.texture);
       break;
     case RENDER_TEXTURED_WIREFRAME_TRIANGLE:
-      draw_textured_triangle(
+      draw_textured_triangle_scanline(
           triangle,
           triangle.texture);
       draw_triangle(
