@@ -16,6 +16,17 @@ sun_light_t get_sun_light()
 {
   return sunlight;
 }
+
+color_t interpolate(float alpha, float beta, float gamma, color_t c0, color_t c1, color_t c2)
+{
+  color_t r = (c0 & RGBA32_R_BITMASK) * alpha + (c1 & RGBA32_R_BITMASK) * beta + (c2 & RGBA32_R_BITMASK) * gamma;
+  color_t g = (c0 & RGBA32_G_BITMASK) * alpha + (c1 & RGBA32_G_BITMASK) * beta + (c2 & RGBA32_G_BITMASK) * gamma;
+  color_t b = (c0 & RGBA32_B_BITMASK) * alpha + (c1 & RGBA32_B_BITMASK) * beta + (c2 & RGBA32_B_BITMASK) * gamma;
+  color_t a = (c0 & RGBA32_A_BITMASK) * alpha + (c1 & RGBA32_A_BITMASK) * beta + (c2 & RGBA32_A_BITMASK) * gamma;
+
+  return (a & RGBA32_A_BITMASK) | (b & RGBA32_B_BITMASK) | (g & RGBA32_G_BITMASK) | (r & RGBA32_R_BITMASK);
+}
+
 color_t light_apply_intensity(color_t original_color, float intensity)
 {
   color_t r = (original_color & RGBA32_R_BITMASK) * intensity;

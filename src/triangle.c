@@ -1,6 +1,7 @@
 #include "triangle.h"
 #include "display.h"
 #include "texture.h"
+#include "light.h"
 
 float edge_cross(vec2_t a, vec2_t b, vec2_t p)
 {
@@ -137,7 +138,7 @@ void fill_flat_top_triangle_scanline(triangle_t triangle, color_t color)
   }
 }
 
-// Highly parallelizable triangle rasterization, algorithm from Juan Pineda's 1988 paper
+// Highly parallelizable triangle rasterizations, algorithm from Juan Pineda's 1988 paper
 // https://www.cs.drexel.edu/~deb39/Classes/Papers/comp175-06-pineda.pdf
 void draw_filled_triangle(triangle_t triangle, color_t color)
 {
@@ -167,16 +168,38 @@ void draw_filled_triangle(triangle_t triangle, color_t color)
   int y_min = fmin(v0.y, fmin(v1.y, v2.y));
   int y_max = fmax(v0.y, fmax(v1.y, v2.y));
 
+  // Compute the delta for the w's per column and per row, since these deltas are constant.
+  // This is because the barycentric coordinate is parallel across the edges.
+  // To derive these formulas, use FOIL expansion on the cross product formula
+  float delta_w0_col = v1.y - v2.y;
+  float delta_w1_col = v2.y - v0.y;
+  float delta_w2_col = v0.y - v1.y;
+
+  float delta_w0_row = v2.x - v1.x;
+  float delta_w1_row = v0.x - v2.x;
+  float delta_w2_row = v1.x - v0.x;
+
   // Bias factors for precedence in rasterization
   int bias0 = is_top_left(&v1_xy, &v2_xy) ? 0 : -1;
   int bias1 = is_top_left(&v2_xy, &v0_xy) ? 0 : -1;
   int bias2 = is_top_left(&v0_xy, &v1_xy) ? 0 : -1;
 
+  // Compute the initial values for the edge functions
+  vec2_t p0 = {x_min, y_min};
+  vec3_t barycentric_unnormalized_row = compute_barycentric_unnormalized(v0_xy, v1_xy, v2_xy, p0);
+  // Add the bias
+  barycentric_unnormalized_row = vec3_add(barycentric_unnormalized_row, vec3_create(bias0, bias1, bias2));
+  float w0_row = barycentric_unnormalized_row.x;
+  float w1_row = barycentric_unnormalized_row.y;
+  float w2_row = barycentric_unnormalized_row.z;
+
   for (int yi = y_min; yi <= y_max; yi++)
   {
+    float w0 = w0_row;
+    float w1 = w1_row;
+    float w2 = w2_row;
     for (int xi = x_min; xi <= x_max; xi++)
     {
-      vec2_t p = {xi, yi};
 
       /**
        *  The point p is inside the triangle if it is to the right of all three edges of the triangle.
@@ -188,11 +211,18 @@ void draw_filled_triangle(triangle_t triangle, color_t color)
        *  Adding a bias essentially "shrinks" the non-top-left edges of the triangle.
        */
 
+      // We actually DON'T have to compute the w's every iteration, because the delta of the cross
+      // products is CONSTANT per iteration. So we can just compute an initial value for the w's,
+      // then increment by a computed delta.
+      /*
+      vec2_t p = {xi, yi};
+
       vec3_t barycentric_unnormalized = compute_barycentric_unnormalized(v0_xy, v1_xy, v2_xy, p);
 
       float w0 = barycentric_unnormalized.x;
       float w1 = barycentric_unnormalized.y;
       float w2 = barycentric_unnormalized.z;
+      */
 
       float alpha = w0 / area_parallelogram;
       float beta = w1 / area_parallelogram;
@@ -205,7 +235,120 @@ void draw_filled_triangle(triangle_t triangle, color_t color)
                             inv_w_v0, inv_w_v1, inv_w_v2,
                             color);
       }
+      w0 += delta_w0_col;
+      w1 += delta_w1_col;
+      w2 += delta_w2_col;
     }
+    w0_row += delta_w0_row;
+    w1_row += delta_w1_row;
+    w2_row += delta_w2_row;
+  }
+  return;
+}
+
+void draw_textured_triangle(triangle_t triangle, upng_t *texture)
+{
+  // Vertices
+  vec4_t v0 = triangle.points[0];
+  vec4_t v1 = triangle.points[1];
+  vec4_t v2 = triangle.points[2];
+
+  vec2_t v0_xy = vec4_xy(v0);
+  vec2_t v1_xy = vec4_xy(v1);
+  vec2_t v2_xy = vec4_xy(v2);
+
+  // Used to compute barycentric coordinates
+  float area_parallelogram = edge_cross(
+      v0_xy,
+      v1_xy,
+      v2_xy);
+
+  // Used for perspective-correct barycentric interpolation
+  float inv_w_v0 = 1.0 / v0.w;
+  float inv_w_v1 = 1.0 / v1.w;
+  float inv_w_v2 = 1.0 / v2.w;
+
+  // Get the bounding box
+  int x_min = fmin(v0.x, fmin(v1.x, v2.x));
+  int x_max = fmax(v0.x, fmax(v1.x, v2.x));
+  int y_min = fmin(v0.y, fmin(v1.y, v2.y));
+  int y_max = fmax(v0.y, fmax(v1.y, v2.y));
+
+  // Compute the delta for the w's per column and per row, since these deltas are constant.
+  // This is because the barycentric coordinate is parallel across the edges.
+  // To derive these formulas, use FOIL expansion on the cross product formula
+  float delta_w0_col = v1.y - v2.y;
+  float delta_w1_col = v2.y - v0.y;
+  float delta_w2_col = v0.y - v1.y;
+
+  float delta_w0_row = v2.x - v1.x;
+  float delta_w1_row = v0.x - v2.x;
+  float delta_w2_row = v1.x - v0.x;
+
+  // Bias factors for precedence in rasterization
+  int bias0 = is_top_left(&v1_xy, &v2_xy) ? 0 : -1;
+  int bias1 = is_top_left(&v2_xy, &v0_xy) ? 0 : -1;
+  int bias2 = is_top_left(&v0_xy, &v1_xy) ? 0 : -1;
+
+  // Compute the initial values for the edge functions
+  vec2_t p0 = {x_min, y_min};
+  vec3_t barycentric_unnormalized_row = compute_barycentric_unnormalized(v0_xy, v1_xy, v2_xy, p0);
+  // Add the bias
+  barycentric_unnormalized_row = vec3_add(barycentric_unnormalized_row, vec3_create(bias0, bias1, bias2));
+  float w0_row = barycentric_unnormalized_row.x;
+  float w1_row = barycentric_unnormalized_row.y;
+  float w2_row = barycentric_unnormalized_row.z;
+
+  for (int yi = y_min; yi <= y_max; yi++)
+  {
+    float w0 = w0_row;
+    float w1 = w1_row;
+    float w2 = w2_row;
+    for (int xi = x_min; xi <= x_max; xi++)
+    {
+
+      /**
+       *  The point p is inside the triangle if it is to the right of all three edges of the triangle.
+       *  Hello, cross product! We can use the cross product's sign to determine if an edge is in correct direction.
+       *  We can't use the cross product in 2D, but we "cheat" by using the z-axis as the result.
+       *
+       *  "Cross products", or 'edge functions' according to Juan Pineda.
+       *  These are actually the barycentric coordinates of the triangle, but not divided by the area of the parallelogram formed by the triangle.
+       *  Adding a bias essentially "shrinks" the non-top-left edges of the triangle.
+       */
+
+      // We actually DON'T have to compute the w's every iteration, because the delta of the cross
+      // products is CONSTANT per iteration. So we can just compute an initial value for the w's,
+      // then increment by a computed delta.
+      /*
+      vec2_t p = {xi, yi};
+
+      vec3_t barycentric_unnormalized = compute_barycentric_unnormalized(v0_xy, v1_xy, v2_xy, p);
+
+      float w0 = barycentric_unnormalized.x;
+      float w1 = barycentric_unnormalized.y;
+      float w2 = barycentric_unnormalized.z;
+      */
+
+      float alpha = w0 / area_parallelogram;
+      float beta = w1 / area_parallelogram;
+      float gamma = 1.0 - alpha - beta;
+
+      if (is_point_inside_triangle(w0, w1, w2, bias0, bias1, bias2))
+      {
+        draw_texel(xi, yi,
+                   alpha, beta, gamma,
+                   inv_w_v0, inv_w_v1, inv_w_v2,
+                   triangle.texcoords[0], triangle.texcoords[1], triangle.texcoords[2],
+                   texture);
+      }
+      w0 += delta_w0_col;
+      w1 += delta_w1_col;
+      w2 += delta_w2_col;
+    }
+    w0_row += delta_w0_row;
+    w1_row += delta_w1_row;
+    w2_row += delta_w2_row;
   }
   return;
 }

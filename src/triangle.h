@@ -49,6 +49,7 @@ void draw_texel(int xi, int yi,
 bool is_top_left(vec2_t *start, vec2_t *end);
 bool is_point_inside_triangle(int w0, int w1, int w2, int bias0, int bias1, int bias2);
 void draw_filled_triangle(triangle_t triangle, color_t color);
+void draw_textured_triangle(triangle_t triangle, upng_t *texture);
 
 void sort_three_vertices_uv_by_y(triangle_t *triangle);
 void fill_flat_bottom_triangle_scanline(triangle_t triangle, color_t color);

@@ -476,12 +476,12 @@ void render(void)
           triangle.color);
       break;
     case RENDER_TEXTURED_TRIANGLE:
-      draw_textured_triangle_scanline(
+      draw_textured_triangle(
           triangle,
           triangle.texture);
       break;
     case RENDER_TEXTURED_WIREFRAME_TRIANGLE:
-      draw_textured_triangle_scanline(
+      draw_textured_triangle(
           triangle,
           triangle.texture);
       draw_triangle(
